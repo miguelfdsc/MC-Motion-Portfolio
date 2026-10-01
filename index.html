@@ -1,0 +1,1479 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Miguel Costa, Motion Designer em Portugal. Animação de marca, infografia 2D, mixed media e vídeo com IA para Adidas, Nescafé, Lion e outras marcas.">
+<meta name="theme-color" content="#5e1b22">
+<meta property="og:title" content="Miguel Costa, Motion Designer">
+<meta property="og:description" content="Brand motion, 2D, mixed media e vídeo com IA. Portugal.">
+<meta property="og:type" content="website">
+<title>Miguel Costa Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script>
+/* Rubber playground floor: one transparent texture (granules + seams) laid over any tile colour. */
+(function(){
+  function speck(seed){
+    const S=176, c=document.createElement("canvas"); c.width=c.height=S; const x=c.getContext("2d");
+    let s=seed; const rnd=()=>(s=s*16807%2147483647)/2147483647;
+    const cols=["rgba(255,228,214,.17)","rgba(0,0,0,.26)","rgba(0,0,0,.15)","rgba(255,255,255,.12)","rgba(239,106,46,.3)","rgba(31,198,227,.22)"];
+    for(let i=0;i<S*S/12;i++){ const k=rnd(); x.fillStyle=cols[k<.36?0:k<.7?1:k<.93?2:k<.975?3:k<.99?4:5];
+      x.fillRect(Math.floor(rnd()*S),Math.floor(rnd()*S),1+Math.floor(rnd()*2.4),1+Math.floor(rnd()*2.4)); }
+    x.fillStyle="rgba(0,0,0,.36)"; x.fillRect(S-3,0,3,S); x.fillRect(0,S-3,S,3);        // seams between tiles
+    x.fillStyle="rgba(255,255,255,.06)"; x.fillRect(0,0,S-3,2); x.fillRect(0,0,2,S-3);  // soft bevel
+    return `url(${c.toDataURL()})`;
+  }
+  try{ document.documentElement.style.setProperty("--speck",speck(7)); }catch(e){}
+})();
+</script>
+<style>
+/* Playground identity: bordeaux rubber-tile floor, stickers, painted hopscotch numbers.
+   Layout: status bar → hero (pixel type + draggable stickers + the site curve) → brand stickers → work (featured + grid/list) → lab → about → contact.
+   One editable curve (hero sticker + corner dock) drives --ease: every transition, the reveals and the wheel/anchor scroll. */
+:root{
+  --floor:#5e1b22; --floor-2:#4a151b; --floor-3:#3a1015;
+  --on:#f7e9dd; --on-2:#dcbab1; --line:rgba(247,233,221,.16); --ink:#2b1115; --chip:#fbf4ea;
+  --signal:#cf3336; --signal-hi:#e8474a; --cyan:#1fc6e3; --orange:#ef6a2e; --yellow:#f7c51e; --pink:#f4abc2;
+  --pc1:#f7e9dd; --pc2:#3a1015; /* per-project colours, swapped when a case opens */
+  --ease:cubic-bezier(.12,.6,.4,1); /* replaced live by the site curve */
+  --f-display:"Pixelify Sans","Courier New",monospace;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --gutter:clamp(20px,5vw,72px); --space:clamp(96px,12vw,184px); --tile:88px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-gutter:stable}
+body{margin:0;overflow-x:hidden;color:var(--on);font:400 17px/1.6 var(--f-body);-webkit-font-smoothing:antialiased;
+  background:var(--speck,none) 0 0/var(--tile) var(--tile),var(--floor)}
+a{color:inherit}
+img{display:block;max-width:100%}
+::selection{background:var(--orange);color:var(--ink)}
+:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:8px;top:-60px;z-index:100;background:var(--chip);color:var(--ink);padding:8px 12px}
+.skip:focus{top:8px}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.wrap{max-width:1440px;margin-inline:auto;padding-inline:var(--gutter)}
+section[id]{scroll-margin-top:34px}
+.z-dark{background:var(--speck,none) 0 var(--bgy,0px)/var(--tile) var(--tile),var(--floor-2)}
+.z-red{background:var(--speck,none) 0 var(--bgy,0px)/var(--tile) var(--tile),var(--signal)}
+
+/* coloured tiles: laid only on empty floor (never under content); a few are loose with something hidden underneath */
+.floor{position:absolute;left:0;top:0;width:100%;height:0;z-index:2;pointer-events:none;overflow:hidden}
+.tl,.hole{position:absolute;width:var(--tile);height:var(--tile)}
+.tl{background:var(--speck,none) 0 0/var(--tile) var(--tile),var(--c)}
+.tl.in{animation:tin .7s var(--ease) var(--dl,0s) both}
+@keyframes tin{from{transform:scale(.2) rotate(-25deg);opacity:0}}
+.tl.loose{appearance:none;border:0;padding:0;margin:0;cursor:pointer;pointer-events:auto;transform-origin:50% 100%;
+  transition:transform .45s var(--ease),box-shadow .45s var(--ease),opacity .35s} /* identical to the floor until you touch it */
+.tl.loose:hover,.tl.loose:focus-visible{z-index:1;transform:perspective(360px) rotateX(18deg) translateY(-5px);box-shadow:inset 0 2px 0 rgba(255,255,255,.22),0 14px 16px rgba(0,0,0,.45)}
+.tl.loose.up{transform:perspective(360px) translate(28px,-120px) rotate(24deg) rotateX(50deg);opacity:0;pointer-events:none}
+.hole{display:grid;place-items:center;background:#1a0508;box-shadow:inset 0 9px 16px rgba(0,0,0,.8),inset 0 0 0 2px rgba(0,0,0,.45)}
+.hole.open{pointer-events:auto;cursor:pointer}
+.hole .ico{display:grid;place-items:center;font:600 20px/1 var(--f-display);color:var(--yellow);transform:scale(0);transition:transform .6s var(--ease) .15s}
+.hole.open .ico{transform:none}
+.hole img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid var(--chip)}
+.choc{display:block;width:40px;height:32px;background:#5a2e17;border:2px solid var(--chip);box-shadow:inset 4px 4px 0 #7c4626,inset -4px -4px 0 #3b1c0d}
+.egg-toast{position:fixed;left:50%;bottom:clamp(14px,2.4vw,28px);z-index:46;width:max-content;max-width:min(440px,calc(100vw - 32px));pointer-events:none;
+  background:var(--yellow);color:var(--ink);border:2px solid var(--ink);box-shadow:5px 5px 0 rgba(26,4,7,.55);padding:12px 16px;
+  font:600 15px/1.4 var(--f-body);transform:translate(-50%,180%) rotate(-2deg);transition:transform .6s var(--ease)}
+.egg-toast.on{transform:translate(-50%,0) rotate(-2deg)}
+.egg-toast .mono{margin-left:6px}
+.egg-count{position:fixed;left:clamp(12px,2vw,28px);bottom:clamp(12px,2vw,28px);z-index:45;appearance:none;cursor:pointer;
+  background:var(--chip);color:var(--ink);border:2px solid var(--ink);box-shadow:4px 4px 0 rgba(26,4,7,.5);padding:8px 12px;font:600 15px var(--f-display);transform:rotate(3deg)}
+.egg-count:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+
+/* reveal on scroll, timed by the site curve (above the tile layer while they travel) */
+.rv{position:relative;z-index:3}
+.rv-on .rv{opacity:0;transform:translateY(72px) rotate(var(--rr,-1.5deg))}
+.rv-on .rv.in{opacity:1;transform:none;transition:transform 1s var(--ease) calc(var(--i,0) * 90ms),opacity .45s linear calc(var(--i,0) * 90ms)}
+
+/* status bar */
+.bar{position:sticky;top:0;z-index:40;background:var(--signal);color:#fff4ee;display:flex;align-items:center;gap:18px;
+  padding:8px var(--gutter);padding-top:calc(8px + env(safe-area-inset-top,0px));font-family:var(--f-mono);font-size:12px;letter-spacing:.04em}
+.bar .crumb{display:flex;gap:14px;min-width:0;white-space:nowrap;overflow:hidden}
+.bar .crumb span::before{content:"> ";opacity:.75}
+.bar .sp{flex:1}
+.bar a{text-decoration:none}
+.bar a:hover{text-decoration:underline}
+.bar :focus-visible{outline-color:#fff4ee}
+.lang{display:flex;border:1px solid rgba(255,244,238,.7)}
+.lang button{all:unset;cursor:pointer;padding:1px 7px}
+.lang button[aria-pressed="true"]{background:#fff4ee;color:var(--signal)}
+.hide-s{display:inline}
+@media (max-width:600px){.hide-s{display:none}}
+
+/* hero */
+.hero{position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(70% 60% at 50% 42%,rgba(150,44,56,.55) 0%,rgba(150,44,56,0) 72%)}
+.hero>.wrap{position:relative;padding-block:clamp(22px,3vw,40px) clamp(56px,7vw,104px)}
+.hero-top{display:flex;justify-content:space-between;gap:10px 24px;flex-wrap:wrap;color:var(--on-2)}
+.hero-top .tc{color:var(--on);font-variant-numeric:tabular-nums}
+.rec::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--signal-hi);margin-right:8px;vertical-align:1px;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.stage-h{position:relative;margin-block:clamp(20px,3.5vw,48px)}
+#pix{display:block;width:100%;height:clamp(320px,58vh,640px);cursor:crosshair;touch-action:pan-y}
+@media (max-width:600px){#pix{height:clamp(340px,112vw,460px)}}
+.cm{position:absolute;width:22px;height:22px;border:0 solid rgba(247,233,221,.45);pointer-events:none}
+.cm.tl{left:-8px;top:-8px;border-width:2px 0 0 2px}.cm.tr{right:-8px;top:-8px;border-width:2px 2px 0 0}
+.cm.bl{left:-8px;bottom:-8px;border-width:0 0 2px 2px}.cm.br{right:-8px;bottom:-8px;border-width:0 2px 2px 0}
+.hero-foot{display:grid;grid-template-columns:minmax(0,1.4fr) auto;gap:28px 48px;align-items:end}
+.lede{font-size:clamp(19px,2vw,26px);line-height:1.4;max-width:36ch;margin:0;text-wrap:pretty}
+.lede b{color:var(--cyan);font-weight:600}
+.cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:760px){.hero-foot{grid-template-columns:1fr}.cta{justify-content:flex-start}}
+
+/* stickers */
+.stk-layer{position:absolute;inset:0;pointer-events:none}
+.stk{position:absolute;left:0;top:0;pointer-events:auto;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;will-change:transform;--bs:clamp(88px,9vw,126px);--cs:clamp(124px,11vw,164px);--ps:clamp(70px,6.8vw,96px)}
+.stk.drag{cursor:grabbing}
+.stk-i{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:var(--f-display);font-weight:600;
+  font-size:clamp(13px,1.35vw,19px);line-height:1;padding:.62em .85em;background:var(--c);color:var(--t);
+  border:2px solid var(--ink);box-shadow:4px 4px 0 rgba(26,4,7,.5);transition:box-shadow .3s var(--ease);
+  animation:pop .7s var(--d,0s) cubic-bezier(.34,1.56,.64,1) both}
+.stk.drag .stk-i{box-shadow:10px 14px 0 rgba(26,4,7,.35)}
+@keyframes pop{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
+.stk.badge .stk-i{position:relative;width:var(--bs);height:var(--bs);border-radius:50%;padding:0;justify-content:center;font-size:clamp(20px,2vw,28px)}
+.stk.badge .ring{position:absolute;inset:0;width:100%;height:100%;animation:spin 16s linear infinite}
+.ring text{font:600 10.5px var(--f-mono);letter-spacing:.06em;fill:var(--ink)}
+@keyframes spin{to{transform:rotate(1turn)}}
+.stk.curve .stk-i{width:var(--cs);height:var(--cs);padding:6px}
+.stk.px .stk-i{width:var(--ps);height:var(--ps);padding:calc(var(--ps) * .08);border-radius:22%}
+.stk.px.round .stk-i{border-radius:50%}
+.stk.px svg{display:block;width:100%;height:100%}
+@media (max-width:640px){.stk.nm{display:none}.stk{--bs:76px;--cs:108px;--ps:58px}}
+
+/* the site curve (no labels on purpose) */
+.cw{display:block;width:100%;height:100%;overflow:visible}
+.cw .c-g{stroke:rgba(43,17,21,.25);stroke-width:1.5;stroke-dasharray:3 4}
+.cw .c-curve{fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.cw .c-arm{stroke:var(--ink);stroke-width:1.5}
+.cw .c-kf{fill:var(--ink)}
+.cw .c-ball{fill:var(--pink);stroke:var(--ink);stroke-width:2}
+.cw .c-h{cursor:grab;outline:none;touch-action:none}
+.cw .c-h .hit{fill:transparent}
+.cw .c-h .v{fill:var(--orange);stroke:var(--ink);stroke-width:2}
+.cw .c-h:hover .v,.cw .c-h.on .v{fill:var(--yellow)}
+.cw .c-h:focus-visible .v{stroke:#fff;stroke-width:3}
+.dock{position:fixed;right:clamp(12px,2vw,28px);bottom:clamp(12px,2vw,28px);z-index:45;visibility:hidden;
+  transform:translateY(170%) rotate(14deg);transition:transform .8s var(--ease),visibility 0s .8s}
+.dock.on{transform:rotate(-4deg);visibility:visible;transition:transform .8s var(--ease)}
+.dock-i{width:108px;height:108px;padding:5px;background:var(--cyan);border:2px solid var(--ink);box-shadow:5px 5px 0 rgba(26,4,7,.55)}
+@media (max-width:600px){.dock{display:none}}
+/* first-time help for the curve: speech-bubble sticker, pulsing handles, a ghost hand showing the drag */
+.cw .c-h .ring{fill:none;stroke:var(--yellow);stroke-width:2.5;opacity:0;transform-box:fill-box;transform-origin:center}
+.intro .cw .c-h .ring{animation:ringp 1.6s ease-out infinite}
+@keyframes ringp{0%{transform:scale(1);opacity:.95}100%{transform:scale(2.8);opacity:0}}
+.c-demo{pointer-events:none}
+.c-ghost{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:4 4;opacity:.55}
+.c-gh{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:3 3}
+.c-hand{fill:#fff;stroke:var(--ink);stroke-width:1.6;stroke-linejoin:round}
+.cw-tip,.dock-tip{position:absolute;width:min(250px,58vw);white-space:normal;background:var(--chip);color:var(--ink);border:2px solid var(--ink);
+  box-shadow:5px 5px 0 rgba(26,4,7,.5);padding:12px 30px 12px 14px;font:500 14px/1.4 var(--f-body);cursor:default}
+.cw-tip{right:calc(100% + 18px);top:50%;translate:0 -50%;animation:pop .6s 1.4s cubic-bezier(.34,1.56,.64,1) both}
+.cw-tip b{display:block;font:600 17px/1.1 var(--f-display);margin-bottom:5px}
+.cw-tip::after,.dock-tip::after{content:"";position:absolute;right:-9px;top:50%;width:14px;height:14px;margin-top:-7px;background:var(--chip);border:2px solid var(--ink);border-left:0;border-bottom:0;transform:rotate(45deg)}
+.stk.flip .cw-tip{right:auto;left:calc(100% + 18px)}
+.stk.flip .cw-tip::after{right:auto;left:-9px;transform:rotate(225deg)}
+.cw-x{appearance:none;position:absolute;top:4px;right:4px;border:0;background:none;color:var(--ink);font:600 18px/1 var(--f-mono);cursor:pointer;padding:4px 6px}
+.cw-x:focus-visible{outline:2px solid var(--ink)}
+@media (max-width:640px){
+  .cw-tip,.stk.flip .cw-tip{left:auto;right:-6px;top:auto;bottom:calc(100% + 16px);translate:none}
+  .cw-tip::after,.stk.flip .cw-tip::after{left:auto;right:30px;top:auto;bottom:-9px;margin:0;transform:rotate(135deg)}
+}
+.dock-tip{right:calc(100% + 18px);bottom:18px;padding-right:14px;opacity:0;transform:translateX(12px);transition:opacity .4s,transform .6s var(--ease);pointer-events:none}
+.dock.tip .dock-tip{opacity:1;transform:none}
+
+.btn{font-family:var(--f-mono);font-size:13px;text-transform:uppercase;letter-spacing:.06em;text-decoration:none;padding:13px 18px;
+  border:1.5px solid currentColor;background:transparent;color:inherit;cursor:pointer;display:inline-flex;gap:8px;align-items:center;
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+.btn:hover{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--bsh,var(--orange))}
+.btn.solid{background:var(--cyan);border-color:var(--cyan);color:#07262c}
+
+/* brand stickers strip (painted lane lines, drifts with the scroll) */
+.brands{overflow:hidden;white-space:nowrap;padding-block:30px;border-block:3px dashed rgba(247,197,30,.4)}
+.marq-in{display:inline-flex;will-change:transform}
+.marq-in>span{display:inline-flex;align-items:center;gap:clamp(48px,6vw,96px);padding-right:clamp(48px,6vw,96px)}
+.lg{--lh:clamp(72px,7.2vw,100px);flex:none;display:flex;align-items:center;justify-content:center;height:var(--lh)}
+.lg img{height:calc(var(--lh) * var(--h));width:auto;max-width:none}
+
+/* sections */
+.sec{padding-block:var(--space)}
+.eyebrow{display:flex;align-items:center;gap:14px;margin:0 0 22px;color:var(--on-2)}
+.hop{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 6px;border:2.5px solid var(--yellow);color:var(--yellow);
+  font:600 16px var(--f-display);letter-spacing:0;transform:rotate(-3deg)}
+.sh{display:flex;align-items:flex-end;justify-content:space-between;gap:28px 56px;flex-wrap:wrap;margin-bottom:clamp(44px,6vw,96px)}
+.sh h2{font-family:var(--f-display);font-weight:600;font-size:clamp(46px,7.4vw,116px);line-height:.86;margin:0;letter-spacing:-.01em}
+.sh-p{max-width:46ch;margin:0;color:var(--on-2);font-size:clamp(16px,1.25vw,19px)}
+
+/* chips: filters + view toggle */
+.tools{display:flex;flex-direction:column;align-items:flex-end;gap:14px}
+@media (max-width:760px){.tools{align-items:flex-start}}
+.filters,.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg{gap:0}.seg .chip+.chip{border-left:0}
+.chip{all:unset;cursor:pointer;font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding:7px 12px;
+  border:1px solid rgba(247,233,221,.28);color:var(--on-2);background:rgba(58,16,21,.35);transition:background .25s var(--ease),color .25s,border-color .25s}
+.chip:hover{border-color:var(--on);color:var(--on)}
+.chip[aria-pressed="true"]{background:var(--orange);border-color:var(--orange);color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+
+/* covers */
+.cover{position:absolute;inset:0;display:block;overflow:hidden;background:var(--c2,var(--floor-3))}
+.cover img,.cover canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
+.cover canvas{image-rendering:pixelated}
+
+/* work: featured blocks + big cards */
+.grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(72px,8vw,128px) clamp(24px,3.6vw,56px)}
+.grid[hidden],.index[hidden]{display:none}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.ft{grid-column:1/-1}
+.ft-media{position:relative;display:block;aspect-ratio:16/9;background:var(--c2);transition:transform .6s var(--ease),box-shadow .6s var(--ease)}
+.ft-media:hover,.ft-media:focus-within{transform:translate(-8px,-8px);box-shadow:16px 16px 0 var(--ac)}
+.ft-media:hover .cover img{transform:scale(1.03)}
+.ft-media video,.card .cv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s;z-index:1}
+.ft-media video.on,.card .cv video.on{opacity:1}
+.card .cv .ft-play{font-size:clamp(15px,1.3vw,19px)}
+.bdgs{position:absolute;left:16px;top:16px;z-index:2;display:flex;gap:8px;flex-wrap:wrap}
+.bdg{background:var(--yellow);color:var(--ink);border:2px solid var(--ink);padding:5px 10px;transform:rotate(-2deg);box-shadow:3px 3px 0 rgba(26,4,7,.45)}
+.bdg+.bdg{background:var(--pink);transform:rotate(2deg)}
+.ft-play{all:unset;box-sizing:border-box;position:absolute;right:clamp(12px,2vw,24px);bottom:clamp(12px,2vw,24px);z-index:2;cursor:pointer;
+  display:inline-flex;gap:10px;align-items:center;font-family:var(--f-display);font-weight:600;font-size:clamp(17px,1.7vw,24px);
+  background:var(--orange);color:var(--ink);border:2px solid var(--ink);padding:.55em .9em;box-shadow:5px 5px 0 rgba(26,4,7,.5);transition:transform .35s var(--ease)}
+.ft-play:hover{transform:translate(-3px,-3px) rotate(-2deg)}
+.ft-play:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.ft-info{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px 64px;margin-top:36px;align-items:start}
+@media (max-width:760px){.ft-info{grid-template-columns:1fr}}
+.ft-meta{color:var(--on-2)}
+.ft-info>div:first-child{container-type:inline-size}
+/* --w = longest word in the title (chars): long words shrink to fit the column instead of running into the brief */
+.ft-t{all:unset;display:block;cursor:pointer;font-family:var(--f-display);font-weight:600;line-height:.86;margin:12px 0 14px;
+  font-size:clamp(52px,7.5vw,112px);font-size:min(clamp(52px,7.5vw,112px),calc(100cqi / (var(--w,6) * .62)))}
+.ft-t:hover{color:var(--yellow)}
+.ft-t:focus-visible{outline:2px solid var(--yellow);outline-offset:4px}
+.ft-s{margin:0;color:var(--on-2);font-size:clamp(17px,1.4vw,20px)}
+.ft-b{margin:0 0 24px;font-size:clamp(17px,1.4vw,21px);line-height:1.5}
+.ft-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+.ft-tags span{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border:1px solid var(--line);color:var(--on-2);padding:3px 8px}
+.wk-b{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer}
+.wk-media{position:relative;display:block;aspect-ratio:16/10;background:var(--c2);transition:transform .6s var(--ease),box-shadow .6s var(--ease)}
+.wk-b:hover .wk-media,.wk-b:focus-visible .wk-media{transform:translate(-6px,-6px);box-shadow:12px 12px 0 var(--ac)}
+.wk-b:focus-visible .wk-media{outline:2px solid var(--yellow);outline-offset:4px}
+.wk-b:hover .cover img,.wk-b:focus-visible .cover img{transform:scale(1.04)}
+.wk-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .35s;z-index:1}
+.wk-media video.on{opacity:1}
+/* grid thumbnails sit back behind the featured blocks: dark veil, gone on hover */
+.wk-media::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:rgba(26,4,7,.5);transition:opacity .5s var(--ease)}
+.wk-b:hover .wk-media::after,.wk-b:focus-visible .wk-media::after{opacity:0}
+.wk-n,.wk-v{position:absolute;z-index:2;background:var(--chip);color:var(--ink);padding:4px 8px}
+.wk-n{left:12px;top:12px}.wk-v{right:12px;bottom:12px}
+.wk-meta{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:24px}
+.wk-t{font-family:var(--f-display);font-weight:600;font-size:clamp(32px,3.6vw,54px);line-height:.95}
+.wk-t::after{content:"→";display:inline-block;margin-left:.3em;opacity:0;transform:translateX(-10px);transition:opacity .3s,transform .5s var(--ease)}
+.wk-b:hover .wk-t::after,.wk-b:focus-visible .wk-t::after{opacity:1;transform:none}
+.wk-y{color:var(--on-2);white-space:nowrap}
+.wk-d{display:block;margin-top:8px;color:var(--on-2);font-size:clamp(16px,1.2vw,18px)}
+
+/* work list (alternative view) */
+.index{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.row{position:relative;border-bottom:1px solid var(--line)}
+.row button{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) 170px 28px;
+  gap:24px;align-items:center;padding:26px 14px;position:relative;z-index:1;transition:color .3s}
+.row::before{content:"";position:absolute;inset:0;background:var(--c2);transform:scaleY(0);transform-origin:bottom;transition:transform .5s var(--ease)}
+.row:hover::before,.row:focus-within::before{transform:scaleY(1)}
+.row:hover button,.row:focus-within button{color:var(--c1)}
+.row .t{font-family:var(--f-display);font-size:clamp(30px,4.4vw,60px);line-height:1;font-weight:600}
+.row .d{opacity:.85;font-size:16px}
+.row .m{font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.85;text-align:right}
+.row .ar{font-family:var(--f-display);font-size:26px;transition:transform .4s var(--ease)}
+.row:hover .ar{transform:translateX(6px)}
+.row .thumb-s{display:none}
+@media (max-width:760px){
+  .row button{grid-template-columns:104px minmax(0,1fr);gap:4px 16px;padding:16px 4px}
+  .row .thumb-s{display:block;position:relative;grid-row:span 3;width:104px;aspect-ratio:16/10;overflow:hidden}
+  .row .m{text-align:left}.row .ar{display:none}
+}
+.preview{position:fixed;left:0;top:0;width:360px;aspect-ratio:16/10;pointer-events:none;z-index:30;opacity:0;transition:opacity .2s;box-shadow:10px 10px 0 var(--ac,var(--orange))}
+.preview.on{opacity:1}
+@media (hover:none),(max-width:760px){.preview{display:none}}
+.cur{position:fixed;left:0;top:0;z-index:35;pointer-events:none;background:var(--yellow);color:var(--ink);border:2px solid var(--ink);padding:8px 12px;opacity:0;white-space:nowrap;transform-origin:0 0}
+@media (hover:none){.cur{display:none}}
+
+/* lab: media only, each at its own aspect ratio; flex-grow = ratio, so a row shares one height */
+.lab{display:flex;flex-wrap:wrap;gap:clamp(48px,5vw,72px) clamp(24px,3.6vw,64px)}
+.card{flex:var(--arn,1.6) 1 0;min-width:min(100%,300px)}
+.card .cv{position:relative;display:block;aspect-ratio:var(--ar,16/10);background:var(--c2);transition:transform .6s var(--ease),box-shadow .6s var(--ease)}
+.card:hover .cv{transform:translate(-6px,-6px);box-shadow:12px 12px 0 var(--ac)}
+.card .cv iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;opacity:0;transition:opacity .4s}
+.card .cv iframe.on{opacity:1}
+a.ft-play{text-decoration:none}
+
+/* about */
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(56px,8vw,140px)}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+.bio{font-size:clamp(19px,1.55vw,23px);line-height:1.5;max-width:40ch;margin:0 0 24px;text-wrap:pretty}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:10px 24px;margin:40px 0 0;padding-top:28px;border-top:1px solid var(--line)}
+.facts dt{color:var(--on-2)}.facts dd{margin:0}
+.caps{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.caps li{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:20px 0;border-bottom:1px solid var(--line)}
+.caps li::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--yellow);transform:scaleX(0);transform-origin:left;transition:transform .8s var(--ease)}
+.caps li:hover::after{transform:scaleX(1)}
+.caps b{font-family:var(--f-display);font-weight:600;font-size:clamp(22px,1.9vw,28px);line-height:1.1}
+.caps span{color:var(--on-2);text-align:right;font-size:14px}
+
+/* contact */
+.contact{color:#fff4ee}
+.contact .eyebrow{color:#ffe3d9}.contact .hop{border-color:#fff4ee;color:#fff4ee}
+.contact h2{font-family:var(--f-display);font-weight:600;font-size:clamp(52px,9.5vw,150px);line-height:.86;margin:0 0 clamp(32px,4vw,56px)}
+.mail{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.mail output{font-family:var(--f-mono);font-size:clamp(17px,2.6vw,32px);user-select:all;word-break:break-all}
+.contact .btn{--bsh:var(--ink)}
+.contact :focus-visible{outline-color:#fff4ee}
+.links{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+footer{background:var(--floor-3);color:var(--on-2)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:22px}
+footer a{text-decoration:none}
+footer a:hover{color:var(--on)}
+
+/* case overlay */
+.case{position:fixed;inset:0;z-index:60;background:var(--pc2);color:var(--pc1);overflow-y:auto;overscroll-behavior:contain;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  clip-path:inset(0 0 100% 0);visibility:hidden;transition:clip-path .7s var(--ease),visibility 0s .7s}
+.case.open{clip-path:inset(0);visibility:visible;transition:clip-path .7s var(--ease)}
+.case-top{position:sticky;top:0;z-index:2;background:var(--pc2);border-bottom:1px solid color-mix(in srgb,var(--pc1) 22%,transparent)}
+.case-top .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:12px}
+.case-top button{all:unset;cursor:pointer;font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.case-top button:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.case-nav{display:flex;gap:16px;align-items:center}
+.case-nav button{font-size:18px;padding:0 4px}
+.case-in{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:clamp(36px,5vw,88px);padding-block:clamp(40px,6vw,96px) clamp(64px,8vw,128px)}
+@media (max-width:900px){.case-in{grid-template-columns:1fr}}
+/* one landscape film: it takes the full width, the info runs in columns underneath */
+.case-in.solo .vids,.case-in.solo .side{grid-column:1/-1}
+.case-in.solo .side{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.75fr) minmax(0,1.5fr);gap:32px clamp(28px,4vw,64px)}
+@media (max-width:900px){.case-in.solo .side{grid-template-columns:repeat(2,minmax(0,1fr))}.case-in.solo .side>:first-child{grid-column:1/-1}}
+@media (max-width:560px){.case-in.solo .side{grid-template-columns:1fr}}
+/* teaser as a full-bleed looping banner, title pinned to its bottom-left corner */
+.case-hero{position:relative;overflow:hidden;height:clamp(420px,56.25vw,calc(100svh - 46px));background:#000;color:#fff}
+.case-hero[hidden]{display:none}
+.case-hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.case-hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.62))}
+.hero-t{position:absolute;left:0;right:0;bottom:0;z-index:1;padding-bottom:clamp(24px,4vw,60px)}
+.case .hero-t .sub{margin:clamp(12px,1.4vw,20px) 0 0;opacity:.85}
+.case-hero:not([hidden])+.case-in{padding-top:clamp(36px,5vw,72px)}
+.case h2{font-family:var(--f-display);font-weight:600;font-size:clamp(48px,8.5vw,132px);line-height:.86;margin:0;grid-column:1/-1;text-wrap:balance}
+.case .sub{grid-column:1/-1;margin:calc(-1 * clamp(20px,3vw,56px)) 0 0;opacity:.75}
+.vids{display:flex;flex-direction:column;gap:28px}
+.vids.pair{flex-direction:row;flex-wrap:wrap}.vids.pair .player{flex:1 1 240px}
+.player{position:relative;overflow:hidden;width:100%;aspect-ratio:var(--ar,16/9);background:color-mix(in srgb,var(--pc1) 10%,var(--pc2))}
+.player .poster,.player canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.player canvas{image-rendering:pixelated}
+.player video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.player .play{all:unset;cursor:pointer;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:linear-gradient(transparent 55%,rgba(0,0,0,.35))}
+.player .play:focus-visible .pb{outline:2px solid var(--pc1);outline-offset:3px}
+.player .pb{font-family:var(--f-display);font-size:20px;background:var(--pc1);color:var(--pc2);padding:11px 20px;display:inline-flex;gap:10px;align-items:center;transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+.player .play:hover .pb{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--pc2)}
+.player .play small{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.6);padding:3px 7px}
+.player .cap{position:absolute;left:0;top:0;z-index:1;font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:var(--pc2);color:var(--pc1);padding:5px 9px}
+.side{display:flex;flex-direction:column;gap:32px}
+.side h3{font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 10px;opacity:.7;font-weight:500}
+.side p{margin:0;font-size:clamp(17px,1.4vw,20px);line-height:1.5}
+.side ul{margin:0;padding-left:18px}
+.side li+li{margin-top:6px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-family:var(--f-mono);font-size:12px;border:1px solid currentColor;padding:3px 8px}
+.credits{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-family:var(--f-mono);font-size:13px;margin:0}
+.credits dt{opacity:.65}.credits dd{margin:0}
+.credits .me{background:var(--pc1);color:var(--pc2);padding:0 5px;justify-self:start}
+.next{all:unset;grid-column:1/-1;cursor:pointer;border-top:1px solid color-mix(in srgb,var(--pc1) 30%,transparent);padding-top:28px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--f-display);font-size:clamp(28px,4vw,52px)}
+.next small{font-family:var(--f-mono);font-size:12px;opacity:.7;text-transform:uppercase;display:block;margin-bottom:6px}
+.next:focus-visible{outline:2px solid currentColor;outline-offset:4px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body id="top">
+<a class="skip" href="#work" data-i18n="skip">Saltar para o trabalho</a>
+
+<header class="bar">
+  <div class="crumb"><span>Miguel Costa</span><span class="hide-s" data-i18n="role">Motion Designer</span><span class="hide-s" id="clock">PT --:--</span></div>
+  <div class="sp"></div>
+  <a href="#work" data-i18n="nav.work">Trabalho</a>
+  <a href="#lab" class="hide-s">Lab</a>
+  <a href="#about" class="hide-s" data-i18n="nav.about">Sobre</a>
+  <a href="#contact" data-i18n="nav.contact">Contacto</a>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" id="lang-pt" aria-pressed="true">PT</button><button type="button" id="lang-en" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<main>
+<div class="hero" id="hero">
+  <div class="wrap">
+    <h1 class="sr">Miguel Costa, Motion Designer</h1>
+    <div class="hero-top mono"><span class="rec hide-s">MC_MOTION_v3.aep · 1920×1080 · 25 fps</span><span class="tc" id="tc">00:00:00:00</span></div>
+    <div class="stage-h">
+      <canvas id="pix" aria-hidden="true"></canvas>
+      <div class="stk-layer" id="stk"></div>
+      <span class="cm tl"></span><span class="cm tr"></span><span class="cm bl"></span><span class="cm br"></span>
+    </div>
+    <div class="hero-foot">
+      <p class="lede" data-i18n="lede">Motion designer em Portugal, com mais de dois anos de agência. Animo campanhas para <b>Adidas, Decathlon e Buondi</b>, para redes sociais, OOH e LED Storefront, entre o After Effects e a produção com IA.</p>
+      <div class="cta">
+        <a class="btn solid" href="#work" data-i18n="cta.work">Ver trabalho ↓</a>
+        <a class="btn" href="#contact" data-i18n="cta.contact">Falar comigo</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="brands" id="marq" aria-hidden="true"><div class="marq-in"></div></div>
+<p class="sr" data-i18n="clients">Clientes: Adidas, Nestlé, Nescafé, Nescafé Dolce Gusto, Buondi, Sical, Lion, Decathlon, Century 21, Effisus, Swee.</p>
+
+<section id="work" class="sec">
+  <div class="wrap">
+    <div class="sh rv">
+      <div><p class="eyebrow mono"><span class="hop">01</span><span data-i18n="eb.work">Destaques</span></p><h2 data-i18n="work.h">Trabalho</h2></div>
+      <div class="tools">
+        <div class="filters" role="group" aria-label="Filter" id="filters"></div>
+        <div class="seg" role="group" aria-label="View"><button type="button" class="chip" id="v-grid" data-i18n="view.grid">Grelha</button><button type="button" class="chip" id="v-list" data-i18n="view.list">Lista</button></div>
+      </div>
+    </div>
+    <ul class="grid" id="grid"></ul>
+    <ul class="index" id="index" hidden></ul>
+  </div>
+</section>
+
+<section id="lab" class="sec z-dark">
+  <div class="wrap">
+    <div class="sh rv"><div><p class="eyebrow mono"><span class="hop">02</span><span data-i18n="eb.lab">Projetos pessoais</span></p><h2>Lab</h2></div><p class="sh-p" data-i18n="lab.p"></p></div>
+    <div class="lab" id="labgrid"></div>
+  </div>
+</section>
+
+<section id="about" class="sec">
+  <div class="wrap two">
+    <div>
+      <div class="rv"><p class="eyebrow mono"><span class="hop">03</span><span data-i18n="eb.about">Sobre</span></p>
+      <div class="sh"><h2 data-i18n="about.h">Sobre</h2></div></div>
+      <p class="bio rv" data-i18n="bio1"></p>
+      <p class="bio rv" data-i18n="bio2"></p>
+      <dl class="facts mono rv">
+        <dt data-i18n="f.base">Base</dt><dd>Portugal</dd>
+        <dt data-i18n="f.now">Agora</dt><dd>Wolt – Energy for Brands</dd>
+        <dt data-i18n="f.lang">Línguas</dt><dd data-i18n="f.langv">Português, Inglês</dd>
+        <dt data-i18n="f.open">Estado</dt><dd data-i18n="f.openv">Aberto a novas oportunidades</dd>
+      </dl>
+    </div>
+    <div>
+      <div class="rv"><p class="eyebrow mono"><span class="hop">+</span><span data-i18n="eb.caps">Capacidades</span></p>
+      <div class="sh"><h2 data-i18n="caps.h">Faço</h2></div></div>
+      <ul class="caps" id="caps"></ul>
+    </div>
+  </div>
+</section>
+
+<section class="sec contact z-red" id="contact">
+  <div class="wrap">
+    <p class="eyebrow mono rv"><span class="hop">04</span><span data-i18n="eb.contact">Contacto</span></p>
+    <h2 class="rv" data-i18n="contact.h">Vamos pôr<br>coisas a mexer.</h2>
+    <div class="mail rv">
+      <output id="email">miguelfilipeco@gmail.com</output>
+      <button class="btn" type="button" id="copy" data-i18n="copy">Copiar email</button>
+    </div>
+    <div class="links rv">
+      <a class="btn" href="https://www.linkedin.com/in/miguel-costa-930034294" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="btn" href="https://vimeo.com/manteigas" target="_blank" rel="noopener">Vimeo ↗</a>
+      <a class="btn" href="https://www.behance.net/manteigas" target="_blank" rel="noopener">Behance ↗</a>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="mono"><div class="wrap"><span>© 2026 Miguel Costa</span><span data-i18n="foot">Feito à mão, pixel a pixel.</span><a href="#top" data-i18n="top">↑ Topo</a></div></footer>
+
+<div class="floor" id="floor"></div>
+<button class="egg-count" id="eggs" type="button" hidden></button>
+<div class="egg-toast" id="toast" role="status" aria-live="polite"></div>
+<div class="dock" id="dock" role="group" data-i18n-aria="cw"><div class="dock-tip" data-i18n="dock.tip"></div><div class="dock-i"><svg class="cw" viewBox="0 0 120 120"></svg></div></div>
+<div class="preview" id="preview" aria-hidden="true"></div>
+<div class="cur mono" id="cur" aria-hidden="true"></div>
+
+<div class="case" id="case" role="dialog" aria-modal="true" aria-labelledby="case-title">
+  <div class="case-top"><div class="wrap">
+    <button type="button" id="case-close" data-i18n="close">← Fechar</button>
+    <div class="case-nav mono"><button type="button" id="case-prev" data-i18n-aria="prev">‹</button><span id="case-count"></span><button type="button" id="case-fwd" data-i18n-aria="nextp">›</button></div>
+  </div></div>
+  <div class="case-hero" id="case-hero" hidden></div>
+  <div class="wrap case-in" id="case-in"></div>
+</div>
+
+<script>
+/* ============ CONTENT ============ */
+// Videos are self-hosted: vid/<slug>.mp4 (streaming-ready copies; originals live in ../video-originais) and 5–6 s silent cover loops in vid/loop/.
+// ar = real aspect ratio; the poster is a still in img/thumbs/.
+// Per project: feat (big featured block, plays its first video), badge (extra sticker on it), loop (cover loop for the grid), thumb / pos (optional),
+// teaser (plays in the featured block instead of the first video), hero (muted looping banner at the top of the case page, title over it).
+const V = (slug, ar, cap, poster) => ({src:`vid/${slug}.mp4`, ar, cap, thumb:`img/thumbs/${poster}.webp`});
+const PROJECTS = [
+  {slug:"adidas", feat:true, title:"Adidas", sub:{pt:"B2B Bulk Orders",en:"B2B Bulk Orders"}, client:"Adidas Dubai", market:"Dubai", year:"2025",
+   c1:"#111111", c2:"#ececec", ac:"#f2f2f2", tags:["brand","2d"], thumb:"img/thumbs/AAYzxHZFV7k.webp",
+   teaser:V("adidas-teaser","16/9","Teaser","AAYzxHZFV7k"),
+   videos:[V("adidas-b2b","16/9",{pt:"Filme principal",en:"Main film"},"khJX68DRSrY")],
+   brief:{pt:"Transformar a lógica da cadeia de abastecimento numa linguagem visual: um fluxo dinâmico a preto e branco para a oferta B2B de encomendas em volume da Adidas.",
+          en:"Turning supply-chain logic into a visual language: a disruptive black-and-white dynamic flow for Adidas' B2B bulk-orders offer."},
+   role:{pt:["Animação e composição em After Effects a partir do design de Francisco Freitas","Filme principal e teaser"],
+         en:["Animation and compositing in After Effects from Francisco Freitas' design","Main film and teaser"]},
+   tools:["After Effects","Illustrator"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Pedro Homem"],["Design","Francisco Freitas"],["Motion","Miguel Costa"],["Client","Adidas Dubai"]]},
+  {slug:"nescafe", feat:true, title:"Nescafé Concentrate", sub:{pt:"Das origens ao futuro",en:"From origins to the future"}, client:"Nescafé Portugal", market:"Portugal", year:"2025",
+   c1:"#a50f24", c2:"#efe6d8", ac:"#efe6d8", tags:["brand","mixed"], loop:"vid/loop/nescafe-film.mp4",
+   hero:V("nescafe-teaser","16/9","Teaser","97UwV23OP2w"),
+   videos:[V("nescafe-film","16/9",{pt:"Filme",en:"Film"},"MLgMaoohI20")],
+   brief:{pt:"Um vídeo que celebra as origens da Nescafé e marca o tom para o futuro da marca com… concentrados?!",
+          en:"A film that celebrates Nescafé's origins and sets the tone for the brand's future with… concentrates?!"},
+   role:{pt:["Motion em mixed media sobre arquivo histórico, em dupla com Paul Bravo"],en:["Mixed-media motion over archive footage, co-animated with Paul Bravo"]},
+   tools:["After Effects","Photoshop"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Rita Gouveia"],["Design","José Pinto"],["Motion","Miguel Costa / Paul Bravo"],["Copy","Pedro Cristino / Joana Rebelo"],["Client","Nescafé Portugal"]]},
+  {slug:"effisus", title:"Effisus", sub:{pt:"Vídeo de lançamento do rebrand",en:"Rebrand launch video"}, client:"Effisus", market:"Dubai", year:"2025",
+   c1:"#c3ea4f", c2:"#0f3a3e", ac:"#c3ea4f", tags:["brand","2d"], thumb:"img/thumbs/gaD5tdH9o4A.webp", loop:"vid/loop/effisus-launch.mp4",
+   hero:V("effisus-teaser","16/9","Teaser","gaD5tdH9o4A"),
+   videos:[V("effisus-launch","16/9",{pt:"Vídeo de lançamento",en:"Launch video"},"tCYDSsDrdNg")],
+   brief:{pt:"“How do you imagine the future in the place you live?” Vídeo de lançamento e teaser para a nova identidade da Effisus.",
+          en:"“How do you imagine the future in the place you live?” Launch video and teaser for Effisus' new identity."},
+   role:{pt:["Animação da nova identidade e tipografia cinética","Vídeo de lançamento e teaser"],en:["Animated the new identity and kinetic typography","Launch video and teaser"]},
+   tools:["After Effects","Illustrator"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Guida Mendes"],["Design","Francisco Freitas"],["Motion","Miguel Costa"],["Copy","Pedro Cristino"],["Client","Effisus"]]},
+  // No short loop cut for Lion yet: the grid card plays the full breakdown, muted
+  {slug:"lion", badge:"Breakdown", title:"Lion", sub:{pt:"Breakdown do anúncio Mix-In",en:"Mix-In ad breakdown"}, client:"Lion España", market:"España", year:"2025",
+   c1:"#4a0c0d", c2:"#f7c51e", ac:"#f7c51e", tags:["social","2d"], thumb:"img/thumbs/gtWHT4hutN4.webp", loop:"vid/lion-breakdown.mp4",
+   videos:[V("lion-breakdown","16/9","Breakdown","Ngp-ICeNxTY")],
+   brief:{pt:"“Los increíbles trocitos.” Breakdown do anúncio de lançamento do Lion Mix-In no mercado espanhol, e os reels que saíram dele.",
+          en:"“Los increíbles trocitos.” A breakdown of the Lion Mix-In launch ad for Spain, and the reels cut from it."},
+   role:{pt:["Animação de produto e packshots para formatos verticais"],en:["Product animation and packshots for vertical formats"]},
+   tools:["After Effects"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Margarida Abegão"],["Design","Diogo Nóbrega"],["Motion","Miguel Costa"],["Copy","Maria Oliveira"],["Client","Lion España"]]},
+  // Client confirmed by the pack in the film (NEO by Nescafé Dolce Gusto). TODO(Miguel): confirmar mercado, ano, papel, ferramentas e créditos
+  {slug:"neo", title:"NEO", sub:{pt:"Signature Espresso",en:"Signature Espresso"}, client:"Nescafé Dolce Gusto", market:"Portugal", year:"2025",
+   c1:"#e6e9ee", c2:"#1d2633", ac:"#aeb8c6", tags:["brand"], loop:"vid/loop/neo.mp4",
+   videos:[V("neo","16/9",{pt:"Filme",en:"Film"},"ajMTt0nLy48")],
+   brief:{pt:"Filme de produto para a NEO Signature Espresso.",en:"Product film for NEO Signature Espresso."},
+   role:{pt:[],en:[]}, tools:[],
+   credits:[["Motion","Miguel Costa"]]},
+  {slug:"swee", title:"Swee", sub:{pt:"Concurso de rebrand",en:"Rebrand contest"}, client:"Swee", market:"Portugal", year:"2025",
+   c1:"#5b1e3a", c2:"#f6d3df", ac:"#f4abc2", tags:["ai","social"], pos:"50% 40%", loop:"vid/loop/swee-popup.mp4",
+   videos:[V("swee-popup","720/846","Pop-up store","kLfUem65rlk")],
+   brief:{pt:"Conteúdo social para a Swee, marca portuguesa de gelado vegan. Imagem e vídeo criados com IA.",en:"Social content for Swee, a Portuguese vegan ice-cream brand. Imagery and video made with AI."},
+   role:{pt:["Geração de imagem (Nano Banana) e vídeo (Kling)","Montagem e acabamento"],en:["Image (Nano Banana) and video (Kling) generation","Edit and finishing"]},
+   tools:["Nano Banana","Kling","After Effects"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Marina Lourenço"],["Design","José Pinto"],["Motion","Miguel Costa"],["Copy","Pedro Cristino / Joana Rebelo"],["Client","Swee"]]},
+  // No short loop cut for Fernão Ferro yet: the grid card plays the full film, muted
+  {slug:"c21-tours", title:"Century21 – Tour Virtual", sub:{pt:"Visitas virtuais",en:"Virtual tours"}, client:"Century 21 West Consulting", market:"Portugal", year:"2026",
+   c1:"#1e1e1e", c2:"#c7b98f", ac:"#c7b98f", tags:["ai"], loop:"vid/c21-fernao-ferro.mp4",
+   videos:[V("c21-fernao-ferro","3/2","Moradia Fernão Ferro","o2QEdaEpvM0"), V("c21-herdade-aroeira","5/4","Herdade Aroeira","pmxh8SXc0dA")],
+   brief:{pt:"Visitas guiadas a imóveis portugueses, criadas com Kling AI e After Effects.",en:"Guided tours through Portuguese properties, built with Kling AI and After Effects."},
+   role:{pt:["Pipeline IA: frames de partida, geração em Kling e consistência entre planos","Composição, grafismo e montagem em After Effects"],en:["AI pipeline: start frames, Kling generation and shot-to-shot consistency","Compositing, graphics and edit in After Effects"]},
+   tools:["Kling","After Effects"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Inês Mestre / Marina Lourenço"],["Motion","Miguel Costa"],["Copy","Joana Rebelo"],["Client","Century 21 West Consulting"]]},
+  // TODO(Miguel): confirmar que os vídeos Oceano e Espaço são desta campanha
+  // Astronaut first. No short loop cut for it yet: the grid card plays the full film, muted
+  {slug:"c21-led", title:"Century21 – O talento faz a diferença", sub:{pt:"Ecrãs LED de montra",en:"Storefront LED screens"}, client:"Century 21 West Consulting", market:"Portugal", year:"2026",
+   c1:"#e6c77c", c2:"#232324", ac:"#e6c77c", tags:["ai","led"], thumb:"img/thumbs/c21-space.webp", pos:"50% 25%", loop:"vid/c21-space.mp4",
+   videos:[V("c21-space","4/5",{pt:"Espaço",en:"Space"},"c21-space"), V("c21-ocean","4/5",{pt:"Oceano",en:"Ocean"},"c21-ocean")],
+   brief:{pt:"Vídeos criados com IA para os ecrãs LED das montras da West Consulting: “Só ainda não vendemos casas no oceano porque estamos à sua espera.”",
+          en:"AI-made videos for West Consulting's storefront LED screens: “The only reason we haven't sold houses in the ocean yet is that we're waiting for you.”"},
+   role:{pt:["Geração com IA e composição em After Effects para o formato dos ecrãs"],en:["AI generation and After Effects compositing for the screens' format"]},
+   tools:["AI video","After Effects"],
+   credits:[["Agency","WOLT – Energy for Brands"],["Creative Dir.","Francisco Freitas"],["Project Mgr.","Inês Mestre / Marina Lourenço"],["Motion","Miguel Costa"],["Copy","Joana Rebelo / Pedro Cristino"],["Client","Century 21 West Consulting"]]}
+];
+// Lab shows the media only (title/d stay for labels and future use). ar = real aspect ratio of the window;
+// sound:true adds the "Ver com som" sticker; vimeo = id, embedded muted on loop until there's an MP4 (then use video + sound instead).
+const LAB = [
+  {slug:"clay", title:"Clay LipSync", c1:"#e9a46a", c2:"#2a1409", ac:"#e9a46a", thumb:"img/thumbs/GU2pWsJU3mA.webp", video:"vid/clay-lipsync.mp4", ar:"1/1", meta:"1:10",
+   d:{pt:"“Mike Pera Talks You to Sleep”: retrato em plasticina com lip sync.",en:"“Mike Pera Talks You to Sleep”: a clay portrait with lip sync."}},
+  // TODO(Miguel): falta o MP4 do ProgSynth; até lá é o embed do Vimeo (som pelo controlo do próprio leitor)
+  {slug:"synth", title:"ProgSynth", c1:"#f4f4f4", c2:"#c40c0c", ac:"#3d6bff", thumb:"img/thumbs/vimeo-695404817.webp", vimeo:"695404817", ar:"16/9", meta:"Vimeo · 0:53",
+   d:{pt:"Audio visualizer sinestésico para um synth old wave, inspirado no trabalho de Norman McLaren.",en:"A synaesthetic audio visualizer for an old-wave synth track, inspired by Norman McLaren's work."}}
+];
+// Brand strip: one-colour (white) logos in img/logos/"logo *", no boxes. h = logo height as a share of the strip's row height.
+// Lion has no one-colour version, so it stays out of the strip.
+const BRANDS = [
+  {n:"Adidas", src:"img/logos/logo adidas.svg", h:.58},
+  {n:"Nescafé", src:"img/logos/logo nescafe.svg", h:.3},
+  {n:"Decathlon", src:"img/logos/logo decathlon.svg", h:.56},
+  {n:"Century 21", src:"img/logos/logo century 21.svg", h:.4},
+  {n:"Nestlé", src:"img/logos/logo nestle.svg", h:.7},
+  {n:"Swee", src:"img/logos/logo swee.png", h:.42},
+  {n:"Adidas Originals", src:"img/logos/logo adidas originals.svg", h:.62},
+  {n:"Buondi", src:"img/logos/logo Buondi.svg", h:.52},
+  {n:"Effisus", src:"img/logos/logo effisus.svg", h:.36},
+  {n:"Sical", src:"img/logos/logo sical.svg", h:.5},
+  {n:"Nescafé Dolce Gusto", src:"img/logos/logo ndg.svg", h:.72}
+];
+const FILTERS = [["all",{pt:"Tudo",en:"All"}],["brand",{pt:"Marca",en:"Brand"}],["2d",{pt:"2D",en:"2D"}],["mixed",{pt:"Mixed media",en:"Mixed media"}],["ai",{pt:"IA",en:"AI"}],["social",{pt:"Social",en:"Social"}],["led",{pt:"LED / OOH",en:"LED / OOH"}]];
+const CAPS = [
+  [{pt:"Animação de marca",en:"Brand motion"},"After Effects · Illustrator"],
+  [{pt:"Infografia 2D",en:"2D infographics"},"Data · Explainers"],
+  [{pt:"Mixed media",en:"Mixed media"},"Archive · Collage"],
+  [{pt:"Vídeo com IA",en:"AI video"},"Kling · Nano Banana · Seedance"],
+  [{pt:"LED & OOH",en:"LED & OOH"},"Large format · Storefront"],
+  [{pt:"Audio visualizers & som",en:"Audio visualizers & sound"},"Sound design · Expressions"]
+];
+// Hero stickers: x/y = starting centre as a fraction of the stage (m = [x,y] on phones), r = resting tilt, nm = hidden on phones,
+// px = pixel tool logo from PIXEL (c = its tile colour, round = circular tile)
+const STICKERS = [
+  {k:"badge", x:.9, y:.18, m:[.86,0], r:-10, c:"var(--yellow)", t:"var(--ink)"},
+  {k:"curve", x:.88, y:.78, m:[.72,1], r:4, c:"var(--cyan)", t:"var(--ink)"},
+  {k:"ae", px:"ae", x:.09, y:.13, r:-8, c:"#00005b"},
+  {k:"ai", px:"ai", x:.13, y:.93, r:6, c:"#330000", nm:1},
+  {k:"resolve", px:"resolve", round:1, x:.72, y:.05, r:0, c:"#3a3a3a", nm:1},
+  {k:"claude", px:"claude", x:.37, y:.97, r:-5, c:"#f3eee4", nm:1},
+  {k:"krea", px:"krea", x:.58, y:.98, r:7, c:"#f5f5f5", nm:1}
+];
+// Pixelated tool logos: each one is sampled on a 16×16 grid (cell centre → colour or nothing) and drawn as square pixels
+// with a hairline gap, like the hero type. Letters are hand-set; the round shapes come from simple distance tests.
+const PIXEL = (function(){
+  const N=16;
+  const AE=["","","","","","....###.........","...#...#........","...#...#..##....","...#####.#..#...","...#...#.####...","...#...#.#......","...#...#..###..."];
+  const AI=["","","","","",".....###...#....","....#...#.......","....#...#..#....","....#####..#....","....#...#..#....","....#...#..#....","....#...#..#...."];
+  const glyph=(rows,col)=>(x,y,i,j)=>(rows[j]||"")[i]==="#"&&col;
+  const cap=(x,y,ax,ay,bx,by,r)=>{ const dx=bx-ax, dy=by-ay, t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy))); return Math.hypot(x-ax-dx*t,y-ay-dy*t)<=r; };
+  const axis=(dx,dy,deg)=>{ const a=deg*Math.PI/180, ux=Math.cos(a), uy=Math.sin(a); return [dx*ux+dy*uy, Math.abs(dy*ux-dx*uy), ux, uy]; }; // along, across
+  const DROPS=[[-90,"#2a8fe6","#a8d8ff"],[150,"#f5ea5a","#fffbd0"],[30,"#ff3050","#ffc2cc"]]; // Resolve: blue top, yellow left, red right
+  const RAYS=[[0,7.3],[34,5.6],[58,6.8],[92,5.3],[118,7.1],[150,5.9],[181,5.5],[208,7.2],[240,5.2],[266,6.6],[300,6],[330,5.6]]; // Claude spark
+  const ICONS={
+    ae:glyph(AE,"#9999ff"),
+    ai:glyph(AI,"#ff9a00"),
+    resolve:(x,y)=>{ const dx=x-8, dy=y-8, d=Math.hypot(dx,dy);
+      if(d>6.2&&d<7.4) return `hsl(${(Math.atan2(dy,dx)*180/Math.PI+280+360)%360} 95% 58%)`; // rainbow rim, cyan at the top
+      for(const [a,c,hi] of DROPS){ const [t,s,ux,uy]=axis(dx,dy,a);
+        if((t>1.2&&t<=3.8&&s<=1.9*(t-1.2)/2.6)||Math.hypot(dx-ux*3.8,dy-uy*3.8)<=1.9) return t<2.3?hi:c; }
+      return 0; },
+    claude:(x,y)=>{ const dx=x-8, dy=y-8; if(Math.hypot(dx,dy)<1.8) return "#d97757";
+      for(const [a,L] of RAYS){ const [t,s]=axis(dx,dy,a); if(t>0&&t<L&&s<.95*(1-t/L)+.3) return "#d97757"; }
+      return 0; },
+    krea:(x,y)=>(cap(x,y,5.9,4.3,5.9,11.7,1.5)||cap(x,y,6.6,8.1,10.5,4.5,1.55)||cap(x,y,8.7,10.2,10.3,11.8,1.5))&&"#111"
+  };
+  return k=>{ const f=ICONS[k]; let r="";
+    for(let j=0;j<N;j++) for(let i=0;i<N;i++){ const c=f(i+.5,j+.5,i,j); if(c) r+=`<rect x="${i+.06}" y="${j+.06}" width=".88" height=".88" fill="${c}"/>`; }
+    return `<svg viewBox="0 0 ${N} ${N}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`; };
+})();
+const I18N = {
+  pt:{role:"Motion Designer","nav.work":"Trabalho","nav.about":"Sobre","nav.contact":"Contacto",skip:"Saltar para o trabalho",
+      lede:"Motion designer em Portugal, com mais de dois anos de agência. Animo campanhas para <b>Adidas, Decathlon e Buondi</b>, para redes sociais, OOH e LED Storefront, entre o After Effects e a produção com IA.",
+      "cta.work":"Ver trabalho ↓","cta.contact":"Falar comigo",clients:"Clientes: Adidas, Nestlé, Nescafé, Nescafé Dolce Gusto, Buondi, Sical, Lion, Decathlon, Century 21, Effisus, Swee.",
+      "eb.work":"Destaques","eb.lab":"Projetos pessoais","eb.about":"Sobre","eb.caps":"Capacidades","eb.contact":"Contacto",
+      "work.h":"Trabalho","view.grid":"Grelha","view.list":"Lista",view:"Ver caso",vid:"vídeo",vids:"vídeos","soon.s":"Em breve",feat:"Destaque",case:"Ver caso →",
+      cw:"Curva de animação do site: muda o scroll e as animações","cw.h1":"Alça de saída da curva (setas para mover)","cw.h2":"Alça de entrada da curva (setas para mover)",
+      badge:"ABERTO A PROPOSTAS ✦ ABERTO A PROPOSTAS ✦ ",
+      "tip.a.h":"A curva do site","tip.a.p":"Arrasta as bolinhas laranja. O scroll e as animações do site passam a seguir esta curva.",
+      "tip.b.h":"Boa!","tip.b.p":"Agora faz scroll e sente a diferença. Duplo clique repõe a curva.","tip.x":"Fechar dica",
+      "dock.tip":"A curva vem contigo. Muda-a quando quiseres.",
+      tile:"Ladrilho solto","egg.hint":"Há ladrilhos soltos pelo chão. Passa o rato por cima e levanta-os.",
+      "egg.done":"Encontraste tudo! Modo recreio ligado: o chão todo às cores.","rec.on":"Recreio ligado","rec.off":"Recreio desligado",
+      "lab.p":"Experiências fora do horário: não recomendado a pessoas com epilepsia fotossensível.","about.h":"Sobre","caps.h":"Faço",
+      bio1:"Sou motion designer na Wolt – Energy for Brands desde 2024. Trabalho com equipas de direção criativa, design e copy para levar campanhas do storyboard ao ecrã, do Dubai a Corroios.",
+      bio2:"O meu território: infografia 2D e animação de marca, mixed media, audio visualizers e pipelines de vídeo com IA (Seedance, Kling, Nano Banana) finalizados em After Effects. Gosto de ritmo, de sonoplastia e de expressões de AE que poupam horas.",
+      "f.base":"Base","f.now":"Agora","f.lang":"Línguas","f.langv":"Português, Inglês","f.open":"Estado","f.openv":"Aberto a novas oportunidades",
+      "contact.h":"Vamos pôr<br>coisas a mexer.",copy:"Copiar email",copied:"Copiado ✓",foot:"Feito à mão, pixel a pixel.",top:"↑ Topo",
+      close:"← Fechar",prev:"Projeto anterior",nextp:"Projeto seguinte",
+      brief:"Brief",myrole:"O meu papel",tools:"Ferramentas",credits:"Créditos",next:"Próximo projeto",watch:"Ver","snd.on":"Ver com som","snd.off":"Silenciar",soon:"Vídeo disponível em breve",open:"Abrir ↗",vimeo:"Ver no Vimeo ↗"},
+  en:{role:"Motion Designer","nav.work":"Work","nav.about":"About","nav.contact":"Contact",skip:"Skip to work",
+      lede:"Motion designer based in Portugal, with over two years of agency experience. I animate campaigns for <b>Adidas, Decathlon and Buondi</b> across social media, OOH and LED storefronts, between After Effects and AI-driven production.",
+      "cta.work":"See work ↓","cta.contact":"Get in touch",clients:"Clients: Adidas, Nestlé, Nescafé, Nescafé Dolce Gusto, Buondi, Sical, Lion, Decathlon, Century 21, Effisus, Swee.",
+      "eb.work":"Highlights","eb.lab":"Personal projects","eb.about":"About","eb.caps":"Capabilities","eb.contact":"Contact",
+      "work.h":"Work","view.grid":"Grid","view.list":"List",view:"View case",vid:"video",vids:"videos","soon.s":"Coming soon",feat:"Featured",case:"View case →",
+      cw:"Site animation curve: changes the scroll and the animations","cw.h1":"Curve outgoing handle (arrow keys to move)","cw.h2":"Curve incoming handle (arrow keys to move)",
+      badge:"OPEN TO NEW WORK ✦ OPEN TO NEW WORK ✦ ",
+      "tip.a.h":"The site's curve","tip.a.p":"Drag the orange dots. The site's scroll and animations will follow this curve.",
+      "tip.b.h":"Nice!","tip.b.p":"Now scroll and feel the difference. Double-click resets the curve.","tip.x":"Close tip",
+      "dock.tip":"Your curve comes along. Change it any time.",
+      tile:"Loose tile","egg.hint":"Some floor tiles are loose. Hover over them and lift them up.",
+      "egg.done":"You found everything! Playground mode on: the whole floor in colour.","rec.on":"Playground on","rec.off":"Playground off",
+      "lab.p":"After-hours experiments: not recommended for people with photosensitive epilepsy.","about.h":"About","caps.h":"I do",
+      bio1:"I've been a motion designer at Wolt – Energy for Brands since 2024, working with creative directors, designers and copywriters to take campaigns from storyboard to screen, from Dubai to Corroios.",
+      bio2:"My ground: 2D infographics and brand motion, mixed media, audio visualizers and AI video pipelines (Seedance, Kling, Nano Banana) finished in After Effects. I care about rhythm, sound design and AE expressions that save hours.",
+      "f.base":"Based in","f.now":"Now","f.lang":"Languages","f.langv":"Portuguese, English","f.open":"Status","f.openv":"Open to new opportunities",
+      "contact.h":"Let's make<br>things move.",copy:"Copy email",copied:"Copied ✓",foot:"Handmade, pixel by pixel.",top:"↑ Top",
+      close:"← Close",prev:"Previous project",nextp:"Next project",
+      brief:"Brief",myrole:"My role",tools:"Tools",credits:"Credits",next:"Next project",watch:"Play","snd.on":"Play with sound","snd.off":"Mute",soon:"Video coming soon",open:"Open ↗",vimeo:"Watch on Vimeo ↗"}
+};
+
+/* ============ STATE / I18N ============ */
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,"0");
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const fine = matchMedia("(hover:hover) and (pointer:fine)").matches;
+let lang = "pt";
+{ let saved=null; try{ saved=localStorage.getItem("mc-lang"); }catch(e){}
+  lang = (saved==="pt"||saved==="en") ? saved : ((navigator.language||"").toLowerCase().startsWith("pt") ? "pt" : "en"); }
+const t = k => I18N[lang][k] ?? k;
+const L = o => (o && typeof o==="object" && !Array.isArray(o)) ? (o[lang] ?? o.pt) : o;
+let filter = "all", view = "grid";
+{ let v=null; try{ v=localStorage.getItem("mc-view"); }catch(e){} if(v==="grid"||v==="list") view=v; }
+const langHooks = []; // modules re-label themselves on language change
+
+/* ============ THE SITE CURVE: one cubic-bezier shared by CSS (--ease), reveals and scroll ============ */
+const EASE = (function(){
+  const DEF=[.12,.6,.4,1];
+  let P=[...DEF];
+  try{ const s=JSON.parse(localStorage.getItem("mc-curve")); if(Array.isArray(s) && s.length===4 && s.every(n=>typeof n==="number" && isFinite(n))) P=s; }catch(e){}
+  const subs=[], saves=[];
+  const bz=(a,b,s)=>{ const u=1-s; return 3*u*u*s*a+3*u*s*s*b+s*s*s; };
+  const dbz=(a,b,s)=>{ const u=1-s; return 3*u*u*a+6*u*s*(b-a)+3*s*s*(1-b); };
+  function solve(x){
+    let s=x;
+    for(let i=0;i<8;i++){ const e=bz(P[0],P[2],s)-x; if(Math.abs(e)<1e-6) return s; const d=dbz(P[0],P[2],s); if(Math.abs(d)<1e-6) break; s-=e/d; if(s<0||s>1) break; }
+    let lo=0, hi=1; s=x;
+    for(let i=0;i<30;i++){ const v=bz(P[0],P[2],s); if(Math.abs(v-x)<1e-6) break; if(v<x) lo=s; else hi=s; s=(lo+hi)/2; }
+    return s;
+  }
+  const apply=()=>document.documentElement.style.setProperty("--ease",`cubic-bezier(${P.map(n=>+n.toFixed(3)).join(",")})`);
+  function set(np, save){
+    P=[clamp(np[0],0,1),clamp(np[1],-.5,1.5),clamp(np[2],0,1),clamp(np[3],-.5,1.5)].map(n=>Math.round(n*1000)/1000);
+    apply(); if(save) try{ localStorage.setItem("mc-curve",JSON.stringify(P)); }catch(e){}
+    subs.forEach(f=>f());
+    if(save) saves.forEach(f=>f());
+  }
+  apply();
+  return { get P(){ return P; }, fn:x=>x<=0?0:x>=1?1:bz(P[1],P[3],solve(x)), set, reset(){ set(DEF,true); }, on(f){ subs.push(f); }, onSave(f){ saves.push(f); } };
+})();
+
+/* ============ REVEALS: elements rise in on scroll, timed by the curve; replayed after each curve edit ============ */
+const RV = (function(){
+  if(reduce || !("IntersectionObserver" in window)) return {watch(){}, replay(){}};
+  document.documentElement.classList.add("rv-on");
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } }),{rootMargin:"0px 0px -6% 0px"});
+  return {
+    watch(root=document){ root.querySelectorAll(".rv:not(.in)").forEach(el=>io.observe(el)); },
+    replay(){
+      const vis=[...document.querySelectorAll(".rv.in")].filter(el=>{ const r=el.getBoundingClientRect(); return r.bottom>0 && r.top<innerHeight; });
+      vis.forEach(el=>el.classList.remove("in")); void document.body.offsetWidth;
+      requestAnimationFrame(()=>vis.forEach(el=>el.classList.add("in")));
+    }
+  };
+})();
+
+/* ============ SCROLL: wheel and anchor jumps glide along the curve (touch and keyboard stay native) ============ */
+const SCROLL = (function(){
+  let from=0, to=0, t0=0, dur=0, raf=0, last=-1;
+  const maxY=()=>document.documentElement.scrollHeight-innerHeight;
+  function step(now){
+    if(last>=0 && Math.abs(scrollY-last)>3){ raf=0; last=-1; return; } // someone else moved the page (keys, scrollbar): let go
+    const k=Math.min(1,(now-t0)/dur);
+    window.scrollTo({top:from+(to-from)*EASE.fn(k), behavior:"instant"}); last=scrollY;
+    if(k<1) raf=requestAnimationFrame(step); else { raf=0; last=-1; }
+  }
+  function go(y, sec){
+    if(reduce){ window.scrollTo({top:y, behavior:"instant"}); return; }
+    from=scrollY; to=clamp(y,0,maxY()); t0=performance.now(); dur=sec*1000; last=-1;
+    if(!raf) raf=requestAnimationFrame(step);
+  }
+  if(fine && !reduce) addEventListener("wheel",e=>{
+    if(e.ctrlKey || currentCase>=0 || Math.abs(e.deltaX)>Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    const d=e.deltaY*(e.deltaMode===1?40:e.deltaMode===2?innerHeight:1);
+    go((raf?to:scrollY)+d, .9);
+  },{passive:false});
+  document.addEventListener("click",e=>{
+    const a=e.target.closest('a[href^="#"]'); if(!a || e.defaultPrevented) return;
+    const id=a.getAttribute("href").slice(1), el=id==="top"?null:document.getElementById(id);
+    if(id!=="top" && !el) return;
+    e.preventDefault();
+    const y=el ? el.getBoundingClientRect().top+scrollY-$(".bar").offsetHeight : 0;
+    go(y, Math.min(1.8,.8+Math.abs(y-scrollY)/3000));
+    if(el && id!=="top") setTimeout(()=>el.focus({preventScroll:true}),50);
+  });
+  return {go};
+})();
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>el.setAttribute("aria-label", t(el.dataset.i18nAria)));
+  $("#lang-pt").setAttribute("aria-pressed", lang==="pt");
+  $("#lang-en").setAttribute("aria-pressed", lang==="en");
+  renderFilters(); renderWork(); renderLab(); renderCaps();
+  langHooks.forEach(f=>f());
+  if(currentCase>=0) renderCase(currentCase);
+}
+function setLang(l){ lang=l; try{localStorage.setItem("mc-lang",l)}catch(e){} applyLang(); }
+$("#lang-pt").onclick=()=>setLang("pt");
+$("#lang-en").onclick=()=>setLang("en");
+
+/* ============ COVERS (real thumbnail; generative pixel art when there is none) ============ */
+const BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function hex(h){h=h.replace("#","");return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]}
+function drawCover(cv, p, seed){
+  const W=160,H=90; cv.width=W; cv.height=H;
+  const x=cv.getContext("2d"); const a=hex(p.c1), b=hex(p.c2);
+  const img=x.createImageData(W,H); const ang=(seed*1.7)%Math.PI;
+  const ca=Math.cos(ang), sa=Math.sin(ang);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+    const u=((i-W/2)*ca+(j-H/2)*sa)/W+.5;
+    const wave=.18*Math.sin(i*.09+seed)+.12*Math.cos(j*.13+seed*2);
+    const v=Math.min(1,Math.max(0,u+wave-.15));
+    const on = v*16 > BAYER[(j%4)*4+(i%4)];
+    const c = on?a:b; const k=(j*W+i)*4;
+    const scan = j%3===0?.85:1;
+    img.data[k]=c[0]*scan; img.data[k+1]=c[1]*scan; img.data[k+2]=c[2]*scan; img.data[k+3]=255;
+  }
+  x.putImageData(img,0,0);
+}
+const thumbOf = p => p.thumb || (p.videos && p.videos[0] && p.videos[0].thumb) || null;
+function coverEl(p, seed){
+  const d=document.createElement("span"); d.className="cover";
+  const pixel=()=>{ const cv=document.createElement("canvas"); drawCover(cv,p,seed); d.appendChild(cv); };
+  const src=thumbOf(p);
+  if(!src){ pixel(); return d; }
+  const im=new Image(); im.alt=""; im.decoding="async"; im.loading="lazy"; im.src=src;
+  if(p.pos) im.style.objectPosition=p.pos;
+  im.onerror=()=>{ im.remove(); pixel(); };
+  d.appendChild(im); return d;
+}
+
+/* ============ RENDER ============ */
+function renderFilters(){
+  const f=$("#filters"); f.innerHTML="";
+  FILTERS.forEach(([k,lab])=>{
+    if(k!=="all" && !PROJECTS.some(p=>p.tags.includes(k))) return;
+    const b=document.createElement("button"); b.type="button"; b.className="chip"; b.textContent=L(lab);
+    b.setAttribute("aria-pressed", filter===k); b.onclick=()=>{filter=k; renderFilters(); renderWork();};
+    f.appendChild(b);
+  });
+}
+/* ============ VIDEO: self-hosted <video>, muted autoplay while on screen, paused off screen, one sound at a time ============ */
+const AUTO = (function(){
+  const ok = !reduce && !(navigator.connection && navigator.connection.saveData); // no autoplay for reduced motion / data saver
+  const has = "IntersectionObserver" in window;
+  const load = v => { if(!v.getAttribute("src") && v.dataset.src){ v.src=v.dataset.src; v.preload="auto"; } };
+  const near = has ? new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ load(e.target); near.unobserve(e.target); } }),{rootMargin:"400px 0px"}) : null;
+  const seen = has ? new IntersectionObserver(es=>es.forEach(e=>{
+    const v=e.target;
+    if(!v.isConnected){ seen.unobserve(v); return; }
+    if(e.isIntersecting){
+      load(v);
+      const blocked = currentCase>=0 && !caseEl.contains(v); // page videos wait behind an open case
+      if(!blocked && (ok || !v.muted)) v.play().catch(()=>{});
+    } else if(!v.paused) v.pause();
+  }),{threshold:.35}) : null;
+  function watch(v){
+    v.muted=true; v.defaultMuted=true; v.playsInline=true; v.setAttribute("playsinline",""); v.loop=true;
+    v.addEventListener("playing",()=>v.classList.add("on"));
+    v.addEventListener("volumechange",()=>{ if(!v.muted) solo(v); });
+    if(has){ seen.observe(v); near.observe(v); } else load(v);
+    return v;
+  }
+  function make(src, poster){
+    const v=document.createElement("video"); v.preload="none"; v.dataset.src=src; if(poster) v.poster=poster;
+    v.setAttribute("aria-hidden","true"); return watch(v);
+  }
+  // Vimeo embeds (ProgSynth until there's an MP4) follow the same rules through the player's postMessage API
+  const vim = (f,method,value) => { try{ f.contentWindow.postMessage(JSON.stringify(value===undefined?{method}:{method,value}),"https://player.vimeo.com"); }catch(e){} };
+  const seenF = has ? new IntersectionObserver(es=>es.forEach(e=>{
+    const blocked = currentCase>=0 && !caseEl.contains(e.target);
+    vim(e.target, e.isIntersecting && ok && !blocked ? "play" : "pause");
+  }),{threshold:.35}) : null;
+  function embed(id, title){
+    const f=document.createElement("iframe"); f.dataset.vimeo=id; f.title=title; f.loading="lazy";
+    f.allow="autoplay; fullscreen; picture-in-picture";
+    f.src=`https://player.vimeo.com/video/${id}?autoplay=${ok?1:0}&muted=1&loop=1&autopause=0&title=0&byline=0&portrait=0&dnt=1`;
+    if(seenF) seenF.observe(f); return f;
+  }
+  // the player stays invisible until Vimeo says it's ready; where embeds are blocked the poster shows instead
+  addEventListener("message",e=>{
+    if(e.origin!=="https://player.vimeo.com") return;
+    let d=e.data; try{ if(typeof d==="string") d=JSON.parse(d); }catch(err){ return; }
+    if(d && d.event==="ready") embeds(document).forEach(f=>{ if(f.contentWindow===e.source) f.classList.add("on"); });
+  });
+  const embeds = root => root.querySelectorAll("iframe[data-vimeo]");
+  function solo(v){ document.querySelectorAll("video").forEach(o=>{ if(o!==v && !o.muted) o.muted=true; }); embeds(document).forEach(f=>vim(f,"setVolume",0)); }
+  const inView = v => { const r=v.getBoundingClientRect(); return r.bottom>0 && r.top<innerHeight && r.width>0; };
+  function hold(root){ root.querySelectorAll("video").forEach(v=>v.pause()); embeds(root).forEach(f=>vim(f,"pause")); }
+  function wake(root){ if(ok){ root.querySelectorAll("video").forEach(v=>{ if(inView(v)) v.play().catch(()=>{}); }); embeds(root).forEach(f=>{ if(inView(f)) vim(f,"play"); }); } }
+  return {ok, make, watch, embed, hold, wake};
+})();
+// "Play with sound" sticker for a muted autoplaying video: restarts it from the top with sound, or mutes it again
+function soundButton(v, host){
+  const b=document.createElement("button"); b.type="button"; b.className="ft-play";
+  const sync=()=>{ const on=!v.muted && !v.paused; b.innerHTML=on?`<span aria-hidden="true">■</span> ${t("snd.off")}`:`<span aria-hidden="true">▶</span> ${t("snd.on")}`; b.setAttribute("aria-pressed",on); };
+  b.onclick=e=>{ e.stopPropagation(); if(v.muted || v.paused){ if(!v.getAttribute("src")) v.src=v.dataset.src; v.currentTime=0; v.muted=false; v.play().catch(()=>{}); } else v.muted=true; };
+  ["volumechange","play","pause"].forEach(ev=>v.addEventListener(ev,sync)); sync();
+  host.appendChild(b); return b;
+}
+function featuredEl(p,i){
+  const li=document.createElement("li"); li.className="ft rv";
+  li.style.cssText=`--c1:${p.c1};--c2:${p.c2};--ac:${p.ac}`;
+  const v=p.teaser||p.videos[0], media=document.createElement("div"); media.className="ft-media";
+  media.appendChild(coverEl(p,i+1));
+  media.insertAdjacentHTML("beforeend",`<span class="bdgs mono"><span class="bdg">★ ${t("feat")}</span>${p.badge?`<span class="bdg">${L(p.badge)}</span>`:""}</span>`);
+  if(v){ const vid=AUTO.make(v.src, thumbOf(p)); vid.removeAttribute("aria-hidden"); vid.setAttribute("aria-label",`${p.title}: ${L(v.cap)}`); media.appendChild(vid); soundButton(vid, media); }
+  li.appendChild(media);
+  const info=document.createElement("div"); info.className="ft-info";
+  const w=Math.max(...p.title.split(/\s+/).map(s=>s.length));
+  info.innerHTML=`<div><span class="ft-meta mono">${pad(i+1)} · ${p.market} · ${p.year}</span><button class="ft-t" type="button" style="--w:${w}">${p.title}</button><p class="ft-s">${L(p.sub)} · ${p.client}</p></div>
+    <div><p class="ft-b">${L(p.brief)}</p><div class="ft-tags">${p.tools.map(x=>`<span>${x}</span>`).join("")}</div><button class="btn" type="button">${t("case")}</button></div>`;
+  info.querySelectorAll("button").forEach(b=>b.onclick=()=>openCase(i));
+  li.appendChild(info);
+  return li;
+}
+function cardEl(p,i,k){
+  const li=document.createElement("li"); li.className="wk rv";
+  li.style.cssText=`--c1:${p.c1};--c2:${p.c2};--ac:${p.ac};--i:${k%2};--rr:${k%2?1.5:-1.5}deg`;
+  const b=document.createElement("button"); b.type="button"; b.className="wk-b";
+  const media=document.createElement("span"); media.className="wk-media";
+  media.appendChild(coverEl(p,i+1));
+  const n=p.videos.length;
+  media.insertAdjacentHTML("beforeend",`<span class="wk-n mono">${pad(i+1)}</span><span class="wk-v mono">${n?`▶ ${n} ${n>1?t("vids"):t("vid")}`:t("soon.s")}</span>`);
+  if(p.loop && AUTO.ok){ // silent cover loop, plays while the card is on screen
+    const lv=AUTO.make(p.loop); if(p.pos) lv.style.objectPosition=p.pos; media.appendChild(lv);
+  }
+  b.appendChild(media);
+  b.insertAdjacentHTML("beforeend",`<span class="wk-meta"><span class="wk-t">${p.title}</span><span class="wk-y mono">${p.market} · ${p.year}</span></span><span class="wk-d">${L(p.sub)} · ${p.client}</span>`);
+  b.onclick=()=>openCase(i);
+  b.addEventListener("pointerenter",e=>{ if(e.pointerType==="mouse") cursorOn(t("view")); });
+  b.addEventListener("pointerleave",cursorOff);
+  li.appendChild(b); return li;
+}
+function renderWork(){
+  const vis=PROJECTS.map((p,i)=>({p,i})).filter(({p})=>filter==="all"||p.tags.includes(filter));
+  const grid=$("#grid"); grid.innerHTML=""; let k=0;
+  vis.forEach(({p,i})=>grid.appendChild(p.feat ? featuredEl(p,i) : cardEl(p,i,k++)));
+  const ul=$("#index"); ul.innerHTML="";
+  vis.forEach(({p,i})=>{
+    const li=document.createElement("li"); li.className="row";
+    li.style.cssText=`--c1:${p.c1};--c2:${p.c2};--ac:${p.ac}`;
+    const b=document.createElement("button"); b.type="button";
+    b.innerHTML=`<span class="t">${p.title}</span><span class="d">${L(p.sub)} · ${p.client}</span><span class="m">${p.market} · ${p.year}</span><span class="ar" aria-hidden="true">→</span>`;
+    const th=document.createElement("span"); th.className="thumb-s"; th.appendChild(coverEl(p,i+1)); b.prepend(th);
+    b.onclick=()=>openCase(i);
+    b.addEventListener("pointerenter",e=>{ if(e.pointerType==="mouse") showPreview(p,i); });
+    b.addEventListener("pointerleave",hidePreview);
+    li.appendChild(b); ul.appendChild(li);
+  });
+  RV.watch(grid);
+}
+function setView(v, save=true){
+  view=v; if(save) try{localStorage.setItem("mc-view",v)}catch(e){}
+  $("#grid").hidden = v!=="grid"; $("#index").hidden = v!=="list";
+  $("#v-grid").setAttribute("aria-pressed", v==="grid"); $("#v-list").setAttribute("aria-pressed", v==="list");
+  hidePreview(); cursorOff();
+}
+$("#v-grid").onclick=()=>setView("grid");
+$("#v-list").onclick=()=>setView("list");
+function renderLab(){
+  const g=$("#labgrid"); g.innerHTML="";
+  LAB.forEach((p,i)=>{
+    const a=document.createElement("div"); a.className="card rv";
+    a.style.cssText=`--c2:${p.c2};--ac:${p.ac};--i:${i%3};--ar:${p.ar};--arn:${arNum(p.ar)}`;
+    const cv=document.createElement("span"); cv.className="cv"; cv.appendChild(coverEl(p,i+11)); a.appendChild(cv);
+    if(p.video){ // plays in place, muted; sound only on request
+      const v=AUTO.make(p.video, p.thumb); v.removeAttribute("aria-hidden"); v.setAttribute("aria-label",p.title); if(p.pos) v.style.objectPosition=p.pos;
+      cv.appendChild(v); if(p.sound) soundButton(v, cv);
+    } else if(p.vimeo){ // sound through the Vimeo player's own control; the link is the way out where embeds are blocked
+      cv.appendChild(AUTO.embed(p.vimeo, p.title));
+      cv.insertAdjacentHTML("beforeend",`<a class="ft-play" href="https://vimeo.com/${p.vimeo}" target="_blank" rel="noopener">${t("vimeo")}</a>`);
+    }
+    g.appendChild(a);
+  });
+  RV.watch(g);
+}
+function renderCaps(){
+  $("#caps").innerHTML = CAPS.map(([a,b],i)=>`<li class="rv" style="--i:${i};--rr:0deg"><b>${L(a)}</b><span>${b}</span></li>`).join("");
+  RV.watch($("#caps"));
+}
+function renderBrands(){
+  const one=BRANDS.map(b=>`<span class="lg" style="--h:${b.h}"><img src="${b.src}" alt=""></span>`).join("");
+  $("#marq .marq-in").innerHTML=`<span>${one}</span><span>${one}</span><span>${one}</span>`;
+}
+
+/* ============ CURSOR LABEL + LIST PREVIEW (both follow the pointer) ============ */
+const cur=$("#cur"), pv=$("#preview");
+let px=0, py=0, cX=0, cY=0, cS=0, cTS=0, cRAF=0, pvx=0, pvy=0, pvOn=false, pvRAF=0;
+addEventListener("pointermove",e=>{ px=e.clientX; py=e.clientY; },{passive:true});
+function cursorOn(txt){
+  if(!fine) return; cur.textContent=txt;
+  if(cS<.05){ cX=px; cY=py; } cTS=1; if(!cRAF) cRAF=requestAnimationFrame(curLoop);
+}
+function cursorOff(){ cTS=0; if(!cRAF && cS>0) cRAF=requestAnimationFrame(curLoop); }
+function curLoop(){
+  const k=reduce?1:.22; cX+=(px-cX)*k; cY+=(py-cY)*k; cS+=(cTS-cS)*(reduce?1:.2);
+  if(cTS===0 && cS<.01) cS=0;
+  cur.style.transform=`translate(${(cX+16).toFixed(1)}px,${(cY+16).toFixed(1)}px) rotate(-4deg) scale(${cS.toFixed(3)})`; cur.style.opacity=cS.toFixed(3);
+  cRAF = (cTS>0 || cS>0) ? requestAnimationFrame(curLoop) : 0;
+}
+function showPreview(p,i){
+  pv.innerHTML=""; pv.appendChild(coverEl(p,i+1)); pv.style.setProperty("--ac",p.ac);
+  if(!pvOn){ pvx=px+28; pvy=py-110; } pvOn=true; pv.classList.add("on"); if(!pvRAF) pvRAF=requestAnimationFrame(pvLoop);
+}
+function hidePreview(){ pvOn=false; pv.classList.remove("on"); }
+function pvLoop(){
+  const tx=px+28, ty=py-110; pvx+=(tx-pvx)*.18; pvy+=(ty-pvy)*.18;
+  const x=Math.min(pvx, innerWidth-pv.offsetWidth-12);
+  pv.style.transform=`translate(${x.toFixed(1)}px,${pvy.toFixed(1)}px) rotate(${((tx-pvx)*.03).toFixed(2)}deg)`;
+  pvRAF = pvOn ? requestAnimationFrame(pvLoop) : 0;
+}
+
+/* ============ CASE OVERLAY ============ */
+const caseEl=$("#case"), caseIn=$("#case-in"), caseHero=$("#case-hero"); let currentCase=-1, lastFocus=null;
+const arNum = ar => { const [a,b]=String(ar||"16/9").split("/").map(Number); return a/(b||1); };
+function playerHTML(v,p){
+  if(!v) return `<div class="player" data-soon><div class="play" style="cursor:default"><small>${t("soon")}</small></div></div>`;
+  const n=arNum(v.ar);
+  const style=`--ar:${v.ar}${n<1?`;width:min(100%,${(78*n).toFixed(1)}vh);margin-inline:auto`:""}`;
+  const cap=v.cap?`<span class="cap">${L(v.cap)}</span>`:"";
+  return `<div class="player" style="${style}">${cap}<video controls preload="none" poster="${v.thumb}" data-src="${v.src}" aria-label="${p.title}: ${L(v.cap)||""}"></video></div>`;
+}
+function renderCase(i){
+  const p=PROJECTS[i]; currentCase=i;
+  caseEl.style.setProperty("--pc1",p.c1); caseEl.style.setProperty("--pc2",p.c2);
+  $("#case-count").textContent=`${pad(i+1)} / ${pad(PROJECTS.length)}`;
+  const nx=PROJECTS[(i+1)%PROJECTS.length];
+  const vids=p.videos.length?p.videos:[null];
+  const pair=vids.length>1 && vids.every(v=>v && arNum(v.ar)<1);
+  const solo=vids.length===1 && vids[0] && arNum(vids[0].ar)>=1;
+  const role=L(p.role)||[];
+  const head=`<h2 id="case-title">${p.title}</h2><p class="sub mono">${L(p.sub)} · ${p.client} · ${p.market} · ${p.year}</p>`;
+  caseHero.innerHTML=""; caseHero.hidden=!p.hero;
+  if(p.hero){ // teaser as a silent looping banner, title over its bottom-left corner
+    caseHero.appendChild(AUTO.make(p.hero.src, p.hero.thumb));
+    caseHero.insertAdjacentHTML("beforeend",`<div class="wrap hero-t">${head}</div>`);
+  }
+  caseIn.classList.toggle("solo", !!solo);
+  caseIn.innerHTML=`
+    ${p.hero?"":head}
+    <div class="vids${pair?" pair":""}">${vids.map(v=>playerHTML(v,p)).join("")}</div>
+    <div class="side">
+      <div><h3>${t("brief")}</h3><p>${L(p.brief)}</p></div>
+      ${role.length?`<div><h3>${t("myrole")}</h3><ul>${role.map(r=>`<li>${r}</li>`).join("")}</ul></div>`:""}
+      ${p.tools.length?`<div><h3>${t("tools")}</h3><div class="tags">${p.tools.map(x=>`<span>${x}</span>`).join("")}</div></div>`:""}
+      <div><h3>${t("credits")}</h3><dl class="credits">${p.credits.map(([k,v])=>`<dt>${k}</dt><dd${/Miguel Costa/.test(v)?' class="me"':''}>${v}</dd>`).join("")}</dl></div>
+    </div>
+    <button class="next" type="button" id="case-next"><span><small>${t("next")}</small>${nx.title}</span><span aria-hidden="true">→</span></button>`;
+  caseIn.querySelectorAll(".player[data-soon]").forEach((el,k)=>{ const cv=document.createElement("canvas"); drawCover(cv,p,i+k+3); el.prepend(cv); });
+  caseIn.querySelectorAll(".player video").forEach(AUTO.watch); // muted autoplay as each one scrolls into view; controls for sound
+  $("#case-next").onclick=()=>go(1);
+}
+function go(d){ caseEl.scrollTo({top:0}); openCase((currentCase+d+PROJECTS.length)%PROJECTS.length); }
+function openCase(i){
+  if(currentCase<0) lastFocus=document.activeElement;
+  hidePreview(); cursorOff(); AUTO.hold($("main")); AUTO.hold(caseEl); renderCase(i); caseEl.classList.add("open"); document.body.style.overflow="hidden";
+  try{ history.replaceState(null,"","#"+PROJECTS[i].slug); }catch(e){}
+  setTimeout(()=>$("#case-close").focus(),50);
+}
+function closeCase(){
+  caseEl.classList.remove("open"); document.body.style.overflow=""; currentCase=-1;
+  AUTO.hold(caseEl); AUTO.wake($("main"));
+  setTimeout(()=>{ if(!caseEl.classList.contains("open")){ caseIn.innerHTML=""; caseHero.innerHTML=""; } },750);
+  try{ history.replaceState(null,"","#work"); }catch(e){}
+  lastFocus&&lastFocus.focus&&lastFocus.focus({preventScroll:true});
+}
+$("#case-close").onclick=closeCase;
+$("#case-prev").onclick=()=>go(-1);
+$("#case-fwd").onclick=()=>go(1);
+addEventListener("keydown",e=>{ if(currentCase<0) return;
+  if(e.key==="Escape") closeCase();
+  if(e.key==="ArrowRight") go(1);
+  if(e.key==="ArrowLeft") go(-1);
+});
+caseEl.addEventListener("keydown",e=>{ if(e.key!=="Tab") return; // keep Tab inside the dialog
+  const f=[...caseEl.querySelectorAll('button,a[href],iframe')].filter(el=>el.offsetParent!==null); if(!f.length) return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+});
+
+/* ============ COPY / CLOCK ============ */
+$("#copy").onclick=async e=>{
+  const b=e.currentTarget;
+  try{ await navigator.clipboard.writeText($("#email").textContent); b.textContent=t("copied"); }
+  catch(err){ const r=document.createRange(); r.selectNodeContents($("#email")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+  setTimeout(()=>b.textContent=t("copy"),1800);
+};
+function tick(){ try{ $("#clock").textContent="PT "+new Intl.DateTimeFormat("pt-PT",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Lisbon"}).format(new Date()); }catch(e){} }
+tick(); setInterval(tick,20000);
+
+/* ============ CURVE WIDGET: two handles, a ball riding the curve, no labels. Used by the hero sticker and the dock. ============ */
+function curveWidget(svg){
+  const NS="http://www.w3.org/2000/svg", X0=16, X1=104, YA=88, YB=34;            // value 0 → y 88, value 1 → y 34
+  const gx=v=>X0+v*(X1-X0), gy=v=>YA-v*(YA-YB), ix=x=>(x-X0)/(X1-X0), iy=y=>(YA-y)/(YA-YB);
+  const mk=(tag,at,parent=svg)=>{ const n=document.createElementNS(NS,tag); for(const k in at) n.setAttribute(k,at[k]); parent.appendChild(n); return n; };
+  const set=(n,at)=>{ for(const k in at) n.setAttribute(k,at[k]); };
+  mk("line",{class:"c-g",x1:X0,x2:X1,y1:gy(0),y2:gy(0)}); mk("line",{class:"c-g",x1:X0,x2:X1,y1:gy(1),y2:gy(1)});
+  const a1=mk("line",{class:"c-arm"}), a2=mk("line",{class:"c-arm"}), path=mk("path",{class:"c-curve"});
+  [[0,0],[1,1]].forEach(([u,v])=>mk("rect",{class:"c-kf",x:-5,y:-5,width:10,height:10,transform:`translate(${gx(u)},${gy(v)}) rotate(45)`}));
+  const ball=mk("circle",{class:"c-ball",r:6});
+  const H=[0,1].map(k=>{ const g=mk("g",{class:"c-h",tabindex:0,role:"slider","aria-valuemin":0,"aria-valuemax":100});
+    mk("circle",{class:"hit",r:17},g); mk("circle",{class:"ring",r:7,style:`animation-delay:${k*.8}s`},g); mk("circle",{class:"v",r:7},g); return g; });
+  function render(){
+    const [x1,y1,x2,y2]=EASE.P;
+    path.setAttribute("d",`M${gx(0)},${gy(0)}C${gx(x1)},${gy(y1)} ${gx(x2)},${gy(y2)} ${gx(1)},${gy(1)}`);
+    set(a1,{x1:gx(0),y1:gy(0),x2:gx(x1),y2:gy(y1)}); set(a2,{x1:gx(1),y1:gy(1),x2:gx(x2),y2:gy(y2)});
+    [[x1,y1],[x2,y2]].forEach(([x,y],k)=>{ H[k].setAttribute("transform",`translate(${gx(x)},${gy(y)})`); H[k].setAttribute("aria-valuenow",Math.round(x*100)); H[k].setAttribute("aria-valuetext",`${x.toFixed(2)}, ${y.toFixed(2)}`); });
+  }
+  const pt=e=>{ const m=svg.getScreenCTM(); if(!m) return [0,0]; const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m.inverse()); return [p.x,p.y]; };
+  let drag=-1, ox=0, oy=0, replayT=0;
+  const commit=()=>{ EASE.set(EASE.P,true); clearTimeout(replayT); replayT=setTimeout(RV.replay,120); };
+  H.forEach((h,k)=>{
+    h.addEventListener("pointerdown",e=>{ e.stopPropagation(); e.preventDefault(); const [x,y]=pt(e); drag=k; ox=gx(EASE.P[k*2])-x; oy=gy(EASE.P[k*2+1])-y; h.setPointerCapture(e.pointerId); h.classList.add("on"); });
+    h.addEventListener("pointermove",e=>{ if(drag!==k) return; const [x,y]=pt(e); const P=[...EASE.P]; P[k*2]=ix(x+ox); P[k*2+1]=iy(y+oy); EASE.set(P,false); });
+    const end=()=>{ if(drag!==k) return; drag=-1; h.classList.remove("on"); commit(); };
+    h.addEventListener("pointerup",end); h.addEventListener("pointercancel",end);
+    h.addEventListener("keydown",e=>{
+      const st=e.shiftKey?.1:.02, P=[...EASE.P];
+      if(e.key==="ArrowLeft") P[k*2]-=st; else if(e.key==="ArrowRight") P[k*2]+=st; else if(e.key==="ArrowUp") P[k*2+1]+=st; else if(e.key==="ArrowDown") P[k*2+1]-=st; else return;
+      e.preventDefault(); e.stopPropagation(); EASE.set(P,false); commit();
+    });
+  });
+  svg.addEventListener("dblclick",e=>{ e.stopPropagation(); EASE.reset(); RV.replay(); });
+  langHooks.push(()=>{ H[0].setAttribute("aria-label",t("cw.h1")); H[1].setAttribute("aria-label",t("cw.h2")); });
+  EASE.on(render); render();
+  // the ball slides along the curve at constant time steps, so it speeds up where the curve is steep
+  let raf=0, vis=false, t0=0;
+  const place=u=>set(ball,{cx:gx(u),cy:gy(EASE.fn(u))});
+  function loop(now){
+    const c=((now-t0)/1000)%2.2, u=Math.min(1,c/1.4); place(u);
+    raf=vis?requestAnimationFrame(loop):0;
+  }
+  place(1);
+  if(!reduce && "IntersectionObserver" in window) new IntersectionObserver(es=>{ vis=es[0].isIntersecting; if(vis && !raf){ t0=performance.now(); raf=requestAnimationFrame(loop); } }).observe(svg);
+  return {svg, gx, gy};
+}
+let HERO_CW=null; // {el, api} of the curve sticker in the hero
+
+/* ============ HERO: pixel type + draggable stickers ============ */
+(function(){
+  const cv=$("#pix"), ctx=cv.getContext("2d"), layer=$("#stk"), tcEl=$("#tc");
+  let W=0,H=0,step=6,parts=[],mouse={x:-9999,y:-9999},t0=performance.now(),raf=0,visible=true,zTop=10;
+  const COLS=["#ef6a2e","#1fc6e3","#1fc6e3"];
+
+  // stickers: plain DOM, positions in stage pixels, thrown with inertia and bounced off the stage edges
+  const S=STICKERS.map((d,n)=>{
+    const el=document.createElement("div"); el.className="stk"+(d.k==="badge"||d.k==="curve"?" "+d.k:"")+(d.px?" px"+(d.round?" round":""):"")+(d.nm?" nm":"");
+    if(d.k!=="curve") el.setAttribute("aria-hidden","true");
+    const inner=d.k==="badge"
+      ? `<svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><defs><path id="ring-p" d="M60,60 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0"/></defs><text><textPath href="#ring-p" textLength="287" lengthAdjust="spacing">${t("badge")}</textPath></text></svg><span>MC</span>`
+      : d.k==="curve" ? `<svg class="cw" viewBox="0 0 120 120"></svg>` : d.px ? PIXEL(d.px) : d.html;
+    el.innerHTML=`<div class="stk-i" style="--c:${d.c};--t:${d.t};--d:${(.3+n*.09).toFixed(2)}s">${inner}</div>`;
+    layer.appendChild(el);
+    if(d.k==="curve"){ el.setAttribute("role","group"); el.dataset.i18nAria="cw"; HERO_CW={el, api:curveWidget(el.querySelector("svg"))}; }
+    const s={el,d,x:0,y:0,vx:0,vy:0,r:d.r,lift:0,drag:false,w:0,h:0,id:null,ox:0,oy:0,lx:0,ly:0,lt:0,placed:false};
+    el.addEventListener("pointerdown",e=>grab(s,e));
+    el.addEventListener("pointermove",e=>move(s,e));
+    el.addEventListener("pointerup",()=>drop(s));
+    el.addEventListener("pointercancel",()=>drop(s));
+    return s;
+  });
+  langHooks.push(()=>{ const tp=layer.querySelector("textPath"); if(tp) tp.textContent=t("badge"); });
+  const lp=e=>{ const r=layer.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+  function grab(s,e){
+    if(e.button>0) return; e.preventDefault();
+    mouse.x=mouse.y=-9999; // the canvas stops getting moves while a sticker holds the pointer
+    const [x,y]=lp(e); s.drag=true; s.id=e.pointerId; s.el.setPointerCapture(e.pointerId);
+    s.ox=x-s.x; s.oy=y-s.y; s.lx=x; s.ly=y; s.lt=performance.now(); s.vx=s.vy=0;
+    s.el.classList.add("drag"); s.el.style.zIndex=++zTop; kick();
+  }
+  function move(s,e){
+    if(!s.drag||e.pointerId!==s.id) return;
+    const [x,y]=lp(e), now=performance.now(), dt=Math.max(8,now-s.lt);
+    s.vx=s.vx*.3+(x-s.lx)/dt*16.7*.7; s.vy=s.vy*.3+(y-s.ly)/dt*16.7*.7; // px per 60fps frame
+    s.lx=x; s.ly=y; s.lt=now; s.x=x-s.ox; s.y=y-s.oy;
+  }
+  function drop(s){
+    if(!s.drag) return; s.drag=false; s.el.classList.remove("drag");
+    if(performance.now()-s.lt>90){ s.vx=s.vy=0; } // held still before letting go: no throw
+    const m=Math.hypot(s.vx,s.vy); if(m>45){ s.vx*=45/m; s.vy*=45/m; }
+    kick();
+  }
+  function bounds(s){
+    const hw=s.w/2, hh=s.h/2;
+    if(s.x<hw){ s.x=hw; s.vx=Math.abs(s.vx)*.55; } else if(s.x>W-hw){ s.x=W-hw; s.vx=-Math.abs(s.vx)*.55; }
+    if(s.y<hh){ s.y=hh; s.vy=Math.abs(s.vy)*.55; } else if(s.y>H-hh){ s.y=H-hh; s.vy=-Math.abs(s.vy)*.55; }
+  }
+  function place(s){
+    s.el.style.transform=`translate(${(s.x-s.w/2).toFixed(1)}px,${(s.y-s.h/2).toFixed(1)}px) rotate(${s.r.toFixed(2)}deg) scale(${(1+s.lift*.08).toFixed(3)})`;
+    if(s.d.k==="curve") s.el.classList.toggle("flip", s.x<W*.5); // its speech bubble opens towards the free side
+  }
+  function stepStickers(){
+    let active=false;
+    for(const s of S){
+      if(!s.w) continue;
+      if(!s.drag){ s.x+=s.vx; s.y+=s.vy; s.vx*=.94; s.vy*=.94; if(Math.abs(s.vx)<.03) s.vx=0; if(Math.abs(s.vy)<.03) s.vy=0; }
+      bounds(s);
+      const tr=s.d.r+Math.max(-28,Math.min(28,s.vx*1.4)); s.r+=(tr-s.r)*.14;
+      const tl=s.drag?1:0; s.lift+=(tl-s.lift)*.25;
+      place(s);
+      if(s.drag||s.vx||s.vy||Math.abs(tr-s.r)>.05||Math.abs(tl-s.lift)>.01) active=true;
+    }
+    return active;
+  }
+
+  // Pixelify's C and G are near-closed boxes that read as O/Q once sampled ("OOSTA"): cut their mouths open before sampling.
+  // Values = [left edge of the cut, top, height] as shares of the glyph's ink box; the cut runs to the glyph's right edge.
+  const MOUTH={C:[.55,.28,.44], G:[.6,.2,.3]};
+  function openMouths(o,txt,cx,cy){
+    o.textAlign="left"; const left=cx-o.measureText(txt).width/2;
+    [...txt].forEach((ch,n)=>{ const m=MOUTH[ch]; if(!m) return;
+      const x0=left+o.measureText(txt.slice(0,n)).width, b=o.measureText(ch);
+      const il=x0-b.actualBoundingBoxLeft, w=b.actualBoundingBoxLeft+b.actualBoundingBoxRight, it=cy-b.actualBoundingBoxAscent, h=b.actualBoundingBoxAscent+b.actualBoundingBoxDescent;
+      o.clearRect(il+w*m[0], it+h*m[1], w*(1-m[0])+1, h*m[2]); });
+    o.textAlign="center";
+  }
+
+  // pixel particles
+  function build(){
+    const r=cv.getBoundingClientRect(); if(r.width<2||r.height<2) return;
+    const oW=W, oH=H, dpr=Math.min(2,devicePixelRatio||1); W=r.width; H=r.height;
+    cv.width=W*dpr; cv.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    step=Math.max(4,Math.round(W/150));
+    const off=document.createElement("canvas"); off.width=W; off.height=H; const o=off.getContext("2d");
+    o.fillStyle="#fff"; o.textAlign="center"; o.textBaseline="middle";
+    const lines=[["MIGUEL COSTA",W<560?.52:.4],["MOTION",1],["DESIGNER",1]];
+    let big=Math.min(H*.36, W/5.2); const fam='"Pixelify Sans", monospace';
+    o.font=`600 ${big}px ${fam}`; const wd=o.measureText("DESIGNER").width; if(wd>W*.94) big*=W*.94/wd;
+    const sizes=lines.map(([,s])=>big*s); const gap=big*.04; const total=sizes.reduce((a,b)=>a+b,0)+gap*2;
+    let y=(H-total)/2; const bands=[];
+    lines.forEach(([txt],k)=>{ o.font=`600 ${sizes[k]}px ${fam}`; o.fillText(txt,W/2,y+sizes[k]/2); openMouths(o,txt,W/2,y+sizes[k]/2); bands.push([y,y+sizes[k]]); y+=sizes[k]+gap; });
+    const ow=off.width, data=o.getImageData(0,0,ow,off.height).data; parts=[];
+    const fine0=Math.max(3,Math.round(step*.55)); // the small name line gets finer pixels so it stays legible
+    for(let j=0;j<H;){
+      const band=bands.findIndex(([a,b])=>j>=a-2&&j<=b+2), st=band===0?fine0:step;
+      for(let i=0;i<ow;i+=st){
+        if(data[(j*ow+i)*4+3]>128) parts.push({hx:i,hy:j,x:i,y:j,vx:0,vy:0,s:st,c:COLS[Math.max(0,band)],ph:Math.random()*6.28});
+      }
+      j+=st;
+    }
+    for(const s of S){
+      s.w=s.el.offsetWidth; s.h=s.el.offsetHeight; if(!s.w) continue; // hidden on phones
+      if(!s.placed){ const m=W<560&&s.d.m; s.x=(m?m[0]:s.d.x)*W; s.y=(m?m[1]:s.d.y)*H; s.placed=true; } else if(oW){ s.x*=W/oW; s.y*=H/oH; }
+      bounds(s); place(s);
+    }
+    draw();
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle="rgba(30,4,8,.45)";
+    for(const p of parts) ctx.fillRect(p.x+p.s*.5,p.y+p.s*.5,p.s-1,p.s-1);
+    for(const p of parts){ ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.s-1,p.s-1); }
+  }
+  function stepParticles(now){
+    const R=Math.max(70,W*.09), tt=(now-t0)/1000;
+    const F=[]; for(const s of S){ if(s.w && (s.drag||Math.hypot(s.vx,s.vy)>1)) F.push([s.x,s.y,Math.max(s.w,s.h)*.6]); } // moving stickers plough through the letters
+    for(const p of parts){
+      let dx=p.x-mouse.x, dy=p.y-mouse.y, d2=dx*dx+dy*dy;
+      if(d2<R*R){ const d=Math.sqrt(d2)||1, f=(1-d/R)*6; p.vx+=dx/d*f; p.vy+=dy/d*f; }
+      for(const [fx,fy,fr] of F){ dx=p.x-fx; dy=p.y-fy; d2=dx*dx+dy*dy; if(d2<fr*fr){ const d=Math.sqrt(d2)||1, f=(1-d/fr)*5; p.vx+=dx/d*f; p.vy+=dy/d*f; } }
+      p.vx+=(p.hx-p.x)*.06+Math.sin(tt*2+p.ph)*.02; p.vy+=(p.hy-p.y)*.06;
+      p.vx*=.78; p.vy*=.78; p.x+=p.vx; p.y+=p.vy;
+    }
+  }
+  function timecode(now){ const f=Math.floor((now-t0)/40); tcEl.textContent=[Math.floor(f/90000),Math.floor(f/1500)%60,Math.floor(f/25)%60,f%25].map(pad).join(":"); }
+  function loop(now){
+    raf=0;
+    let active=stepStickers();
+    if(!reduce && visible){ stepParticles(now); draw(); timecode(now); active=true; }
+    if(active) raf=requestAnimationFrame(loop);
+  }
+  function kick(){ if(!raf) raf=requestAnimationFrame(loop); }
+  function burst(x,y){ for(const p of parts){ const dx=p.x-x, dy=p.y-y, d=Math.hypot(dx,dy)||1; const f=Math.max(0,1-d/(W*.5))*40; p.vx+=dx/d*f+(Math.random()-.5)*6; p.vy+=dy/d*f+(Math.random()-.5)*6; } }
+  // on top of the burst: a hard shockwave that throws the pixel tool logos away from the click (only those, not the badge or the curve).
+  // Everything on stage gets a real kick, the nearest ones hardest; they tilt, pop, bounce off the edges and plough through the letters.
+  function shove(x,y){
+    const R=Math.hypot(W,H);
+    for(const s of S){ if(!s.d.px||!s.w||s.drag) continue;
+      const dx=s.x-x, dy=s.y-y, d=Math.hypot(dx,dy)||1, f=Math.min(60,22+44*Math.max(0,1-d/R));
+      s.vx+=dx/d*f; s.vy+=dy/d*f-6; s.lift=1; }
+  }
+  cv.addEventListener("pointermove",e=>{ const r=cv.getBoundingClientRect(); mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top; });
+  cv.addEventListener("pointerleave",()=>{ mouse.x=mouse.y=-9999; });
+  cv.addEventListener("pointerdown",e=>{ const r=cv.getBoundingClientRect(); if(!reduce){ const x=e.clientX-r.left, y=e.clientY-r.top; burst(x,y); shove(x,y); kick(); } });
+  let rt, ready=false; const rebuild=()=>{ if(!ready) return; clearTimeout(rt); rt=setTimeout(()=>{ build(); kick(); },150); };
+  if("ResizeObserver" in window) new ResizeObserver(rebuild).observe(cv); else addEventListener("resize",rebuild);
+  (document.fonts&&document.fonts.load ? document.fonts.load('600 40px "Pixelify Sans"').catch(()=>{}) : Promise.resolve()).then(()=>{ ready=true; build(); kick(); });
+  if("IntersectionObserver" in window) new IntersectionObserver(es=>es.forEach(e=>{ visible=e.isIntersecting; if(visible) kick(); })).observe(cv);
+})();
+
+/* ============ DOCK: the curve follows you down the page (says so once, the first time it appears) ============ */
+(function(){
+  const dock=$("#dock"); curveWidget(dock.querySelector("svg"));
+  if(!("IntersectionObserver" in window)) return;
+  let told=false; try{ told=localStorage.getItem("mc-dock-tip")==="1"; }catch(e){}
+  new IntersectionObserver(es=>{
+    const on=!es[0].isIntersecting; dock.classList.toggle("on", on);
+    if(on && !told){ told=true; try{ localStorage.setItem("mc-dock-tip","1"); }catch(e){}
+      setTimeout(()=>dock.classList.add("tip"),700); setTimeout(()=>dock.classList.remove("tip"),5200); }
+  }).observe($("#hero"));
+})();
+
+/* ============ CURVE INTRO: first visit only. Bubble + pulsing handles + a ghost hand dragging a handle; after the first edit it invites a scroll. ============ */
+(function(){
+  const KEY="mc-curve-intro"; let done=false; try{ done=localStorage.getItem(KEY)==="done"; }catch(e){}
+  if(done || !HERO_CW) return;
+  const stk=HERO_CW.el, api=HERO_CW.api, NS="http://www.w3.org/2000/svg";
+  let stage="a";
+  stk.classList.add("intro");
+  const tip=document.createElement("div"); tip.className="cw-tip";
+  const fill=()=>{ tip.innerHTML=`<b>${t(`tip.${stage}.h`)}</b>${t(`tip.${stage}.p`)}<button class="cw-x" type="button" aria-label="${t("tip.x")}">×</button>`; tip.querySelector(".cw-x").onclick=finish; };
+  fill(); langHooks.push(fill);
+  tip.addEventListener("pointerdown",e=>e.stopPropagation()); // reading the bubble never drags the sticker
+  stk.appendChild(tip);
+  function finish(){
+    if(done) return; done=true; try{ localStorage.setItem(KEY,"done"); }catch(e){}
+    stopDemo(); stk.classList.remove("intro"); removeEventListener("scroll",onScroll);
+    if(tip.animate && !reduce) tip.animate([{opacity:1},{opacity:0,transform:"scale(.85)"}],{duration:260,easing:"ease-in"}).onfinish=()=>tip.remove(); else tip.remove();
+  }
+  function onScroll(){ if(scrollY>innerHeight*.7) finish(); }
+  EASE.onSave(()=>{
+    if(done || stage==="b") return;
+    stage="b"; stopDemo(); stk.classList.remove("intro"); fill();
+    addEventListener("scroll",onScroll,{passive:true}); setTimeout(finish,12000);
+  });
+  // ghost demo: a dashed copy of the curve and a hand pull the first handle somewhere else and back (the real curve is untouched)
+  const g=document.createElementNS(NS,"g"); g.setAttribute("class","c-demo"); g.style.opacity=0;
+  g.innerHTML='<path class="c-ghost"/><circle class="c-gh" r="7"/><path class="c-hand" d="M0,0L0,15L4,11.5L7,18L9.5,17L6.8,10.6L12,10.6Z"/>';
+  api.svg.appendChild(g);
+  const [gp,gc,hand]=g.children;
+  let draf=0, stopped=false, runs=0;
+  function frame(x1,y1,x2,y2){
+    gp.setAttribute("d",`M${api.gx(0)},${api.gy(0)}C${api.gx(x1)},${api.gy(y1)} ${api.gx(x2)},${api.gy(y2)} ${api.gx(1)},${api.gy(1)}`);
+    gc.setAttribute("cx",api.gx(x1)); gc.setAttribute("cy",api.gy(y1));
+    hand.setAttribute("transform",`translate(${(api.gx(x1)+2).toFixed(1)},${(api.gy(y1)+2).toFixed(1)})`);
+  }
+  function demo(){
+    if(stopped || reduce) return;
+    const [a,b,c,d]=EASE.P, tx=a<.5?Math.min(1,a+.45):a-.45, ty=b>.5?b-.9:b+.9, t0=performance.now(), sm=u=>u*u*(3-2*u);
+    const step=now=>{
+      if(stopped) return;
+      const s=(now-t0)/1000; let k=0;
+      if(s<.35) g.style.opacity=s/.35; else if(s<1.35) k=sm(s-.35); else if(s<1.8) k=1; else if(s<2.8) k=1-sm(s-1.8);
+      else if(s<3.1) g.style.opacity=1-(s-2.8)/.3;
+      else { g.style.opacity=0; if(++runs<3) setTimeout(demo,2400); return; }
+      if(s>=.35 && s<2.8) g.style.opacity=1;
+      frame(a+(tx-a)*k, b+(ty-b)*k, c, d); draf=requestAnimationFrame(step);
+    };
+    draf=requestAnimationFrame(step);
+  }
+  function stopDemo(){ stopped=true; cancelAnimationFrame(draf); g.style.opacity=0; }
+  stk.addEventListener("pointerdown",stopDemo,true);
+  setTimeout(demo,2000);
+})();
+
+/* ============ FLOOR: coloured rubber tiles on the empty floor, 7 loose ones hiding something; find all for playground mode ============ */
+const FLOOR = (function(){
+  const layer=$("#floor"), chip=$("#eggs"), toastEl=$("#toast"), T=88, M=18; // tile size, clearance around content
+  const PAL=["#c4553a","#d6ac38","#2f7a62","#3a67a0","#e0782f","#c9668c","#6f4f96"]; // terracotta, mustard, green, blue, orange, pink, violet
+  const EGGS=[
+    {id:"kf", ico:'<span class="ico" style="color:var(--orange)">◆</span>', m:{pt:"Encontraste um keyframe perdido. Estava aqui desde a v1.",en:"You found a lost keyframe. It's been here since v1."}},
+    {id:"undo", ico:'<span class="ico">⌘Z</span>', m:{pt:"Ctrl+Z ×47. Ninguém precisa de saber.",en:"Ctrl+Z ×47. Nobody needs to know."}},
+    {id:"render", ico:'<span class="ico" style="color:var(--cyan)">99%</span>', m:{pt:"Render a 99%… há três horas.",en:"Render at 99%… for three hours."}},
+    {id:"precomp", ico:'<span class="ico">▣</span>', m:{pt:"Uma pré-comp dentro de uma pré-comp dentro de uma pré-comp.",en:"A precomp inside a precomp inside a precomp."}},
+    {id:"trocito", ico:'<span class="ico"><i class="choc"></i></span>', m:{pt:"Um dos increíbles trocitos do Lion. Fica para ti.",en:"One of Lion's increíbles trocitos. It's yours."}},
+    {id:"clay", ico:'<span class="ico"><img src="img/thumbs/GU2pWsJU3mA.webp" alt=""></span>', m:{pt:"O retrato de plasticina fugiu do Lab.",en:"The clay portrait escaped from the Lab."}},
+    {id:"f9", ico:'<span class="ico" style="color:var(--pink)">F9</span>', m:{pt:"F9: a resposta para quase tudo.",en:"F9: the answer to almost everything."}}
+  ];
+  const BLOCKS=".hero-top,.stage-h,.hero-foot,.brands,.sh,.grid>li,.index,.lab>.card,.bio,.facts,.caps,.contact .eyebrow,.contact h2,.mail,.links,footer";
+  let found=new Set(), recreio=false, wave=null, timer=0, toastT=0;
+  try{ found=new Set(JSON.parse(localStorage.getItem("mc-eggs")||"[]").filter(id=>EGGS.some(e=>e.id===id))); recreio=localStorage.getItem("mc-recreio")==="1"; }catch(e){}
+  const save=()=>{ try{ localStorage.setItem("mc-eggs",JSON.stringify([...found])); localStorage.setItem("mc-recreio",recreio?"1":"0"); }catch(e){} };
+  const h2=(x,y,s)=>{ let h=Math.imul(x|0,374761393)^Math.imul(y|0,668265263)^Math.imul(s,982451653); h=Math.imul(h^(h>>>13),1274126177); return ((h^(h>>>16))>>>0)/4294967296; };
+  const vn=(x,y,s)=>{ const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi, u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf);
+    const a=h2(xi,yi,s), b=h2(xi+1,yi,s), c=h2(xi,yi+1,s), d=h2(xi+1,yi+1,s); return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v; };
+  const shade=(hex,k)=>{ const n=parseInt(hex.slice(1),16); return `rgb(${Math.min(255,(n>>16)*k)|0},${Math.min(255,(n>>8&255)*k)|0},${Math.min(255,(n&255)*k)|0})`; };
+  function box(el){ let x=0,y=0,e=el; while(e){ x+=e.offsetLeft; y+=e.offsetTop; e=e.offsetParent; } return [x,y,x+el.offsetWidth,y+el.offsetHeight]; } // layout box, ignores reveal transforms
+  function toast(html){ toastEl.innerHTML=html; toastEl.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>toastEl.classList.remove("on"),4200); }
+  function count(){
+    chip.hidden=found.size===0;
+    const all=found.size===EGGS.length;
+    chip.textContent=`◆ ${found.size}/${EGGS.length}`+(all?` · ${t(recreio?"rec.on":"rec.off")}`:"");
+  }
+  chip.onclick=()=>{
+    if(found.size<EGGS.length){ toast(t("egg.hint")); return; }
+    recreio=!recreio; save(); count();
+    wave=[innerWidth/2+scrollX, innerHeight/2+scrollY]; build(); toast(t(recreio?"rec.on":"rec.off"));
+  };
+  function lift(b,hole,egg){
+    b.classList.add("up"); open(hole,egg); found.add(egg.id); save(); count();
+    toast(`${L(egg.m)}<span class="mono">${found.size}/${EGGS.length}</span>`);
+    setTimeout(()=>b.remove(),600);
+    if(found.size===EGGS.length && !recreio) setTimeout(()=>{
+      recreio=true; save(); count(); const r=box(hole); wave=[r[0]+T/2,r[1]+T/2]; build(); toast(t("egg.done"));
+    },1600);
+  }
+  function open(hole,egg){ hole.classList.add("open"); hole.tabIndex=0; hole.setAttribute("role","button"); hole.setAttribute("aria-label",L(egg.m)); }
+  function build(){
+    timer=0;
+    const W=document.documentElement.clientWidth, foot=$("footer"), H=box(foot)[3];
+    layer.style.height=H+"px";
+    document.querySelectorAll(".z-dark,.z-red").forEach(el=>el.style.setProperty("--bgy",-(box(el)[1]%T)+"px")); // keep every zone on the same tile grid
+    const occ=[...document.querySelectorAll(BLOCKS)].filter(el=>el.offsetParent||el===foot).map(box).filter(r=>r[2]>r[0] && r[3]>r[1]);
+    const zones=[...document.querySelectorAll(".z-dark,.z-red")].map(el=>[box(el),el.classList.contains("z-red")?"var(--signal)":"var(--floor-2)"]);
+    const free=[];
+    for(let r=0;r*T<H;r++) for(let c=0;(c+1)*T<=W;c++){ // whole tiles only, no sliver at the right edge
+      const x0=c*T, y0=r*T;
+      if(occ.some(o=>x0<o[2]+M && x0+T>o[0]-M && y0<o[3]+M && y0+T>o[1]-M)) continue;
+      free.push({c, r, x:x0, y:y0});
+    }
+    // loose tiles wear the colour of the floor they sit on, so nothing gives them away; playground mode colours every free tile
+    const floorAt=(x,y)=>{ const z=zones.find(([b])=>x>=b[0] && x+T<=b[2] && y>=b[1] && y+T<=b[3]); return z?z[1]:(zones.some(([b])=>y<b[3] && y+T>b[1])?null:"var(--floor)"); };
+    const heroB=box($("#hero"))[3], eggAt=new Map(), spots=free.filter(f=>f.y>=heroB && floorAt(f.x,f.y)); // not under the hero's glow, not straddling two zones
+    const order=[...spots].sort((a,b)=>h2(a.c,a.r,31)-h2(b.c,b.r,31)), chosen=[]; // stable pseudo-random picks, at least 4 tiles apart when possible
+    for(const f of order){ if(chosen.length===EGGS.length) break; if(chosen.every(g=>Math.hypot(g.c-f.c,g.r-f.r)>=4)) chosen.push(f); }
+    for(const f of order){ if(chosen.length===EGGS.length) break; if(!chosen.includes(f)) chosen.push(f); }
+    chosen.sort((a,b)=>a.r-b.r||a.c-b.c).forEach((f,i)=>eggAt.set(f,EGGS[i]));
+    const cells=free.filter(f=>recreio || eggAt.has(f)).map(f=>{
+      const off=Math.floor(vn(f.c*.11,f.r*.11,23)*PAL.length); // playground mode: a 4-colour diagonal checker, like poured playground floors
+      return {x:f.x, y:f.y, egg:eggAt.get(f), col:recreio ? shade(PAL[(off+(f.c+2*f.r)%4)%PAL.length], .9+h2(f.c,f.r,9)*.16) : floorAt(f.x,f.y)};
+    });
+    const frag=document.createDocumentFragment();
+    cells.forEach(cell=>{
+      const pos=`left:${cell.x}px;top:${cell.y}px;--c:${cell.col}`, egg=cell.egg;
+      if(egg){
+        const hole=document.createElement("div"); hole.className="hole"; hole.style.cssText=pos; hole.innerHTML=egg.ico;
+        hole.onclick=()=>toast(L(egg.m)); hole.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toast(L(egg.m)); } };
+        frag.appendChild(hole);
+        if(found.has(egg.id)){ open(hole,egg); return; }
+        const b=document.createElement("button"); b.type="button"; b.className="tl loose"; b.style.cssText=pos; b.setAttribute("aria-label",t("tile"));
+        b.onclick=()=>lift(b,hole,egg); frag.appendChild(b); return;
+      }
+      const d=document.createElement("div"); d.className="tl"; d.style.cssText=pos;
+      if(wave && !reduce){ d.classList.add("in"); d.style.setProperty("--dl",Math.min(1.6,Math.hypot(cell.x-wave[0],cell.y-wave[1])/1400).toFixed(2)+"s"); }
+      frag.appendChild(d);
+    });
+    layer.replaceChildren(frag); wave=null;
+  }
+  const schedule=()=>{ clearTimeout(timer); timer=setTimeout(build,220); };
+  if("ResizeObserver" in window) new ResizeObserver(schedule).observe(document.body); else addEventListener("resize",schedule);
+  addEventListener("load",schedule); if(document.fonts) document.fonts.ready.then(schedule);
+  langHooks.push(()=>{ count(); layer.querySelectorAll(".loose").forEach(b=>b.setAttribute("aria-label",t("tile"))); });
+  return {build:schedule};
+})();
+
+/* ============ BRAND STRIP: drifts with the scroll direction, speeds up with scroll velocity ============ */
+(function(){
+  renderBrands();
+  const m=$("#marq"), inn=m.firstElementChild; if(reduce || !("IntersectionObserver" in window)) return;
+  let x=0, w=0, v=-.6, dir=-1, lastY=scrollY, raf=0, vis=false;
+  const measure=()=>{ w=inn.firstElementChild.getBoundingClientRect().width; };
+  function loop(){
+    const dy=scrollY-lastY; lastY=scrollY; if(dy) dir=dy>0?-1:1;
+    v+=(dir*(.6+Math.min(60,Math.abs(dy))*.35)-v)*.08; x+=v;
+    if(w){ if(x<=-w) x+=w; else if(x>0) x-=w; }
+    inn.style.transform=`translate3d(${x.toFixed(2)}px,0,0)`;
+    raf=vis?requestAnimationFrame(loop):0;
+  }
+  new IntersectionObserver(es=>{ vis=es[0].isIntersecting; if(vis && !raf){ lastY=scrollY; measure(); raf=requestAnimationFrame(loop); } }).observe(m);
+  addEventListener("resize",measure); addEventListener("load",measure);
+})();
+
+/* ============ BOOT ============ */
+applyLang(); setView(view,false); RV.watch();
+// deep link
+(function(){ const h=(location.hash||"").slice(1); const i=PROJECTS.findIndex(p=>p.slug===h); if(i>=0) openCase(i); })();
+</script>
+
+</body>
+</html>
